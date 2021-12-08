@@ -1,2 +1,2 @@
 # unionManagementVue
-东联军团管理系统
+EVE东部联邦联盟系统
