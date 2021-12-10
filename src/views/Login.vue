@@ -143,6 +143,7 @@ export default {
                 this.$store.commit("handleLogin",res.obj);
 
                 this.$cookies.set('username',res.obj.username);
+                this.$cookies.set('gameId',res.obj.gameId);
                 this.$cookies.set('shortArmy',res.obj.shortArmy);
                 this.$cookies.set('army',res.obj.army);
                 this.$cookies.set('union',res.obj.union);

@@ -32,7 +32,7 @@
                     </template>
                 </el-dropdown>
             </div>
-            <div class="header-right header-item" style="margin-right:20px">{{"["+$store.state.loginInfo.shortArmy+"]"+$store.state.loginInfo.username}}</div>
+            <div class="header-right header-item" style="margin-right:20px">{{"["+$store.state.loginInfo.shortArmy+"]"+$store.state.loginInfo.gameId}}</div>
         </div>
         <div class="main">
             <router-view></router-view>
@@ -71,6 +71,7 @@ export default {
     created(){
         let loginInfo = {
             username:this.$cookies.get('username'),
+            gameId:this.$cookies.get('gameId'),
             shortArmy:this.$cookies.get('shortArmy'),
             army:this.$cookies.get('army'),
             union:this.$cookies.get('union'),
