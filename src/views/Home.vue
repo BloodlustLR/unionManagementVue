@@ -9,10 +9,12 @@
             <div v-for="(item ,index) in menuList" :key="index">
                 <div class="menu-title" :style="{'background-color':item.color}">{{item.title}}</div>
                 <div v-for="(subItem ,subIndex) in item.children" :key="index+'_'+subIndex">
-                    <div class="menu-item" @click="clickMenu(subItem)">
-                        <img :src="subItem.icon"/>
-                        <span v-show="showMenuText" style="width:65px">{{subItem.title}}</span>
-                    </div>
+                    <el-tooltip effect="dark" :content="subItem.title" :disabled="!isCollapse" placement="right">
+                        <div class="menu-item" @click="clickMenu(subItem)">
+                            <img :src="subItem.icon"/>
+                            <span v-show="showMenuText" style="width:65px">{{subItem.title}}</span>
+                        </div>
+                    </el-tooltip>
                 </div>
             </div>
         </div>
@@ -68,8 +70,8 @@ export default {
                 },
                 {
                     icon:require("@/assets/km.png"),
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     title:"KM统计",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     path:""
                 }]
             },
@@ -84,8 +86,8 @@ export default {
                 },
                 {
                     icon:require("@/assets/km.png"),
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     title:"KM统计",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     path:""
                 }]
             },
@@ -100,8 +102,8 @@ export default {
                 },
                 {
                     icon:require("@/assets/km.png"),
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     title:"KM统计",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     path:""
                 }]
             },
@@ -116,8 +118,8 @@ export default {
                 },
                 {
                     icon:require("@/assets/km.png"),
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     title:"KM统计",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     path:""
                 }]
             }]
