@@ -18,12 +18,21 @@
     </div>
     <div :class="{'right':true,'right-collapse':isCollapse,'right-expend':!isCollapse}">
         <div class="header">
-            <div class="header-left header-item" style="width:60px;" @click="collapseOrExpendMenu">
+            <div class="header-left header-item-click" style="width:60px;" @click="collapseOrExpendMenu">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" data-v-152cbb9b="" height="40" width="40" style="margin-top:10px"><path fill="currentColor" d="M640 384v256H384V384h256zm64 0h192v256H704V384zm-64 512H384V704h256v192zm64 0V704h192v192H704zm-64-768v192H384V128h256zm64 0h192v192H704V128zM320 384v256H128V384h192zm0 512H128V704h192v192zm0-768v192H128V128h192z"></path></svg>
             </div>
-            <div class="header-right header-item" style="width:60px;">
-                <img :src="headImg" style="height:60px;width:60px;"/>
+            <div class="header-right header-item-click" style="width:60px;">
+                <el-dropdown>
+                    <img class="el-dropdown-link" :src="headImg" style="height:60px;width:60px;"/>
+                    <template #dropdown>
+                    <el-dropdown-menu>
+                        <el-dropdown-item>个人信息</el-dropdown-item>
+                        <el-dropdown-item @click="logout">登出</el-dropdown-item>
+                    </el-dropdown-menu>
+                    </template>
+                </el-dropdown>
             </div>
+            <div class="header-right header-item" style="margin-right:20px">{{"["+$store.state.loginInfo.shortArmy+"]"+$store.state.loginInfo.username}}</div>
         </div>
         <div class="main">
             <router-view></router-view>
@@ -59,6 +68,24 @@ export default {
             ]
         }
     },
+    created(){
+        let loginInfo = {
+            username:this.$cookies.get('username'),
+            shortArmy:this.$cookies.get('shortArmy'),
+            army:this.$cookies.get('army'),
+            union:this.$cookies.get('union'),
+            role:this.$cookies.get('role')
+        }
+
+        if(isEmpty(loginInfo.username)||isEmpty(loginInfo.role)){
+            alert("请先登录");
+            this.$router.push("/");
+        }
+
+        console.log(loginInfo);
+
+        this.$store.commit("handleLogin",loginInfo);
+    },
     methods:{
         /**
          * 收起或展开菜单
@@ -72,8 +99,42 @@ export default {
                     this.showMenuText = true;
                 },300)
             }
+        },
+
+        /**
+         * 登出
+         */
+        logout(){
+
+            this.$cookies.remove('username');
+            this.$cookies.remove('shortArmy');
+            this.$cookies.remove('army');
+            this.$cookies.remove('union');
+            this.$cookies.remove('role');
+
+            this.$store.commit("handleLogout");
+
+            this.$router.push("/");
         }
     }
+}
+
+/**
+ * 判断数据是否为空
+ * @param value 需要验证的数据
+ * @returns {boolean}
+ */
+function isEmpty(value) {
+  if (
+    value === undefined ||
+    value === null ||
+    value === "" ||
+    value.toString().trim().length === 0
+  ) {
+    return true;
+  } else {
+    return false;
+  }
 }
 </script>
 <style lang="less">
@@ -171,7 +232,15 @@ export default {
                 text-align: center;
             }
 
-            .header-item:hover{
+            .header-item-click{
+                height:60px;
+                line-height:60px;
+                display: inline-block;
+                vertical-align: middle;
+                text-align: center;
+            }
+
+            .header-item-click:hover{
                 cursor: pointer;
                 background-color: darkgray;
             }
