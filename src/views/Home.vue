@@ -6,13 +6,14 @@
             <span v-show="showMenuText" style="width:65px">东部联邦</span>
         </div>
         <div class="menu">
-            <div  v-for="(item ,index) in menuList" :key="index">
-                <router-link :to="item.path">
-                    <div class="menu-item">
-                        <img :src="item.icon"/>
-                        <span v-show="showMenuText" style="width:65px">{{item.title}}</span>
+            <div v-for="(item ,index) in menuList" :key="index">
+                <div class="menu-title" :style="{'background-color':item.color}">{{item.title}}</div>
+                <div v-for="(subItem ,subIndex) in item.children" :key="index+'_'+subIndex">
+                    <div class="menu-item" @click="clickMenu(subItem)">
+                        <img :src="subItem.icon"/>
+                        <span v-show="showMenuText" style="width:65px">{{subItem.title}}</span>
                     </div>
-                </router-link>
+                </div>
             </div>
         </div>
     </div>
@@ -35,7 +36,7 @@
             <div class="header-right header-item" style="margin-right:20px">{{"["+$store.state.loginInfo.shortArmy+"]"+$store.state.loginInfo.gameId}}</div>
         </div>
         <div class="main">
-            <router-view></router-view>
+            <router-view ref="mainView"></router-view>
         </div>
     </div>
     <div class="clear"></div>
@@ -54,18 +55,72 @@ export default {
             showMenuText:true,
 
             headImg:require("@/assets/myHead.jpg"),
+
             menuList:[
-                {
+            {
+                title: '联盟',
+                color: 'rgba(116, 116, 223, 0.548)',
+                children:[{
                     icon:require("@/assets/ship.png"),
                     title:"补损办公室",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     path:"fillloss"
                 },
                 {
                     icon:require("@/assets/km.png"),
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     title:"KM统计",
-                    path:"/"
-                }
-            ]
+                    path:""
+                }]
+            },
+            {
+                title:'军团',
+                color: 'darkgreen',
+                children:[{
+                    icon:require("@/assets/ship.png"),
+                    title:"补损办公室",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    path:"fillloss"
+                },
+                {
+                    icon:require("@/assets/km.png"),
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    title:"KM统计",
+                    path:""
+                }]
+            },
+            {
+                title:'个人',
+                color: 'blue',
+                children:[{
+                    icon:require("@/assets/ship.png"),
+                    title:"补损办公室",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    path:"fillloss"
+                },
+                {
+                    icon:require("@/assets/km.png"),
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    title:"KM统计",
+                    path:""
+                }]
+            },
+            {
+                title:'系统',
+                color: 'black',
+                children:[{
+                    icon:require("@/assets/ship.png"),
+                    title:"补损办公室",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    path:"fillloss"
+                },
+                {
+                    icon:require("@/assets/km.png"),
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    title:"KM统计",
+                    path:""
+                }]
+            }]
         }
     },
     created(){
@@ -100,6 +155,17 @@ export default {
                     this.showMenuText = true;
                 },300)
             }
+        },
+
+        /**
+         * 点击菜单
+         */
+        clickMenu(item){
+            if(item.allow.indexOf(this.$store.state.loginInfo.role)==-1){
+                alert("无权限");
+                return;
+            }
+            this.$refs.mainView.$router.push(item.path);
         },
 
         /**
@@ -169,6 +235,14 @@ function isEmpty(value) {
 
         .menu{
             height:calc(100% - 60px);
+            overflow-y: auto;
+
+            .menu-title{
+                height:30px;
+                line-height: 30px;
+                text-align: center;
+                color:white;
+            }
 
             .menu-item{
                 height:60px;
