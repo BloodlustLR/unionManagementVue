@@ -1,7 +1,7 @@
 <template>
 <div class="home">
     <div :class="{'left':true,'left-collapse':isCollapse,'left-expend':!isCollapse}">
-        <div class="logo">
+        <div class="logo" @click="backToTopic">
             <img :src="logoSrc"/>
             <span v-show="showMenuText" style="width:65px">东部联邦</span>
         </div>
@@ -169,6 +169,13 @@ export default {
         },
 
         /**
+         * 返回公告主页
+         */
+        backToTopic(){
+            this.$refs.mainView.$router.push("topic");
+        },
+
+        /**
          * 登出
          */
         logout(){
@@ -231,6 +238,10 @@ function isEmpty(value) {
                 vertical-align: middle;
                 margin-left: 10px;
             }
+        }
+
+        .logo:hover{
+            cursor: pointer;
         }
 
         .menu{
