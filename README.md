@@ -1,2 +1,2 @@
 # unionManagementVue
-EVE东部联邦联盟系统
+EVE东部联邦联盟系统前端
