@@ -134,6 +134,17 @@ export default {
             if(res.obj==null){
                 ElMessage.error('请检查登录信息')
             }else{
+
+                if(res.obj.army==null){
+                    ElMessage.error('您的军团已被移出系统');
+                    return;
+                }
+
+                if(res.obj.union==null){
+                    ElMessage.error('您的联盟已被移出系统');
+                    return;
+                }
+
                 console.log(res.obj);
                 ElMessage({
                     message: '登陆成功',

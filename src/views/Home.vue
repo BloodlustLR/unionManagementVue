@@ -112,15 +112,9 @@ export default {
                 color: 'black',
                 children:[{
                     icon:require("@/assets/ship.png"),
-                    title:"补损办公室",
+                    title:"联盟军团管理",
                     allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
-                    path:"fillloss"
-                },
-                {
-                    icon:require("@/assets/km.png"),
-                    title:"KM统计",
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
-                    path:""
+                    path:"unionArmy"
                 }]
             }]
         }
