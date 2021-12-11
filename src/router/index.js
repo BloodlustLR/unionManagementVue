@@ -2,7 +2,9 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import Login from '../views/Login.vue'
 import Home from '../views/Home.vue'
 import Topic from '../views/Menu/Topic'
-import FillLoss from '../views/Menu/FillLoss'
+import FillLoss from '../views/Menu/union/FillLoss'
+
+import UnionArmy from '../views/Menu/sys/unionArmy'
 
 const routes = [
   {
@@ -25,6 +27,11 @@ const routes = [
         path: 'fillloss',
         name:'FillLoss',
         component: FillLoss
+      },
+      {
+        path:'unionArmy',
+        name:'UnionArmy',
+        component: UnionArmy
       }
     ]
   }

@@ -1,18 +1,21 @@
 <template>
 <div class="home">
     <div :class="{'left':true,'left-collapse':isCollapse,'left-expend':!isCollapse}">
-        <div class="logo">
+        <div class="logo" @click="backToTopic">
             <img :src="logoSrc"/>
             <span v-show="showMenuText" style="width:65px">东部联邦</span>
         </div>
         <div class="menu">
-            <div  v-for="(item ,index) in menuList" :key="index">
-                <router-link :to="item.path">
-                    <div class="menu-item">
-                        <img :src="item.icon"/>
-                        <span v-show="showMenuText" style="width:65px">{{item.title}}</span>
-                    </div>
-                </router-link>
+            <div v-for="(item ,index) in menuList" :key="index">
+                <div class="menu-title" :style="{'background-color':item.color}">{{item.title}}</div>
+                <div v-for="(subItem ,subIndex) in item.children" :key="index+'_'+subIndex">
+                    <el-tooltip effect="dark" :content="subItem.title" :disabled="!isCollapse" placement="right">
+                        <div class="menu-item" @click="clickMenu(subItem)">
+                            <img :src="subItem.icon"/>
+                            <span v-show="showMenuText" style="width:65px">{{subItem.title}}</span>
+                        </div>
+                    </el-tooltip>
+                </div>
             </div>
         </div>
     </div>
@@ -32,10 +35,10 @@
                     </template>
                 </el-dropdown>
             </div>
-            <div class="header-right header-item" style="margin-right:20px">{{"["+$store.state.loginInfo.shortArmy+"]"+$store.state.loginInfo.username}}</div>
+            <div class="header-right header-item" style="margin-right:20px">{{"["+$store.state.loginInfo.shortArmy+"]"+$store.state.loginInfo.gameId}}</div>
         </div>
         <div class="main">
-            <router-view></router-view>
+            <router-view ref="mainView"></router-view>
         </div>
     </div>
     <div class="clear"></div>
@@ -54,23 +57,72 @@ export default {
             showMenuText:true,
 
             headImg:require("@/assets/myHead.jpg"),
+
             menuList:[
-                {
+            {
+                title: '联盟',
+                color: 'rgba(116, 116, 223, 0.548)',
+                children:[{
                     icon:require("@/assets/ship.png"),
                     title:"补损办公室",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     path:"fillloss"
                 },
                 {
                     icon:require("@/assets/km.png"),
                     title:"KM统计",
-                    path:"/"
-                }
-            ]
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    path:""
+                }]
+            },
+            {
+                title:'军团',
+                color: 'darkgreen',
+                children:[{
+                    icon:require("@/assets/ship.png"),
+                    title:"补损办公室",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    path:"fillloss"
+                },
+                {
+                    icon:require("@/assets/km.png"),
+                    title:"KM统计",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    path:""
+                }]
+            },
+            {
+                title:'个人',
+                color: 'blue',
+                children:[{
+                    icon:require("@/assets/ship.png"),
+                    title:"补损办公室",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    path:"fillloss"
+                },
+                {
+                    icon:require("@/assets/km.png"),
+                    title:"KM统计",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    path:""
+                }]
+            },
+            {
+                title:'系统',
+                color: 'black',
+                children:[{
+                    icon:require("@/assets/ship.png"),
+                    title:"联盟军团管理",
+                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    path:"unionArmy"
+                }]
+            }]
         }
     },
     created(){
         let loginInfo = {
             username:this.$cookies.get('username'),
+            gameId:this.$cookies.get('gameId'),
             shortArmy:this.$cookies.get('shortArmy'),
             army:this.$cookies.get('army'),
             union:this.$cookies.get('union'),
@@ -99,6 +151,24 @@ export default {
                     this.showMenuText = true;
                 },300)
             }
+        },
+
+        /**
+         * 点击菜单
+         */
+        clickMenu(item){
+            if(item.allow.indexOf(this.$store.state.loginInfo.role)==-1){
+                alert("无权限");
+                return;
+            }
+            this.$refs.mainView.$router.push(item.path);
+        },
+
+        /**
+         * 返回公告主页
+         */
+        backToTopic(){
+            this.$refs.mainView.$router.push("topic");
         },
 
         /**
@@ -166,8 +236,20 @@ function isEmpty(value) {
             }
         }
 
+        .logo:hover{
+            cursor: pointer;
+        }
+
         .menu{
             height:calc(100% - 60px);
+            overflow-y: auto;
+
+            .menu-title{
+                height:30px;
+                line-height: 30px;
+                text-align: center;
+                color:white;
+            }
 
             .menu-item{
                 height:60px;
