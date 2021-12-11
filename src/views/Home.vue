@@ -110,12 +110,20 @@ export default {
             {
                 title:'系统',
                 color: 'black',
-                children:[{
-                    icon:require("@/assets/ship.png"),
-                    title:"联盟军团管理",
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
-                    path:"unionArmy"
-                }]
+                children:[
+                    {
+                        icon:require("@/assets/ship.png"),
+                        title:"联盟军团库",
+                        allow:["超级管理员"],
+                        path:"unionArmy"
+                    },
+                    {
+                        icon:require("@/assets/ship.png"),
+                        title:"舰船库",
+                        allow:["超级管理员"],
+                        path:"ship"
+                    },                    
+                ]
             }]
         }
     },

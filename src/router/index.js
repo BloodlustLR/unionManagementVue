@@ -5,6 +5,7 @@ import Topic from '../views/Menu/Topic'
 import FillLoss from '../views/Menu/union/FillLoss'
 
 import UnionArmy from '../views/Menu/sys/unionArmy'
+import Ship from '../views/Menu/sys/ship'
 
 const routes = [
   {
@@ -32,6 +33,11 @@ const routes = [
         path:'unionArmy',
         name:'UnionArmy',
         component: UnionArmy
+      },
+      {
+        path:'ship',
+        name:'Ship',
+        component: Ship
       }
     ]
   }
