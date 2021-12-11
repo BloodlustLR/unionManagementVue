@@ -15,11 +15,15 @@
             <el-table-column label="操作" width="300">
                 <template #default="scope">
                     <!-- <span style="margin-left: 10px">{{ scope.row.date }}</span> -->
-                    <el-button type="primary" size="small">查看详情</el-button>
+                    <el-button type="success" size="small" @click="">复制链接</el-button>
+                    <el-button type="primary" size="small" @click="checkDetail">查看详情</el-button>
                     <el-button type="danger" size="small">删除</el-button>
                 </template>
             </el-table-column>
         </el-table>
+    </div>
+    <div class="bottom-board">
+          <el-pagination :page-size="20" :pager-count="11" layout="prev, pager, next" :total="1000"></el-pagination>
     </div>
 
     <el-dialog v-model="standardModal" title="补损标准" width="1200px" :close-on-click-modal="false">
@@ -122,7 +126,9 @@ export default {
         }
     },
     methods:{
-
+        checkDetail(){
+            this.$router.push("/home/filllossDetail");
+        }
     }
 }
 </script>
@@ -144,12 +150,18 @@ export default {
     }
 
     .main-board{
-        height:calc(90% - 60px);
+        height:calc(80% - 60px);
         width:90%;
         margin:0 auto;
         background-color: white;
+    }
 
-
+    .bottom-board{
+        height:60px;
+        line-height:60px;
+        width:90%;
+        margin:0 auto;
+        text-align: center;
     }
 }
 

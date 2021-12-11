@@ -3,6 +3,7 @@ import Login from '../views/Login.vue'
 import Home from '../views/Home.vue'
 import Topic from '../views/Menu/Topic'
 import FillLoss from '../views/Menu/union/FillLoss'
+import FillLossDetail from '../views/Menu/union/FillLossDetail'
 
 import UnionArmy from '../views/Menu/sys/unionArmy'
 import Ship from '../views/Menu/sys/ship'
@@ -28,6 +29,11 @@ const routes = [
         path: 'fillloss',
         name:'FillLoss',
         component: FillLoss
+      },
+      {
+        path: 'filllossDetail',
+        name:'FillLossDetail',
+        component: FillLossDetail
       },
       {
         path:'unionArmy',
