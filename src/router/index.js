@@ -1,6 +1,8 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import Login from '../views/Login.vue'
 import Home from '../views/Home.vue'
+import ReportPayment from '../views/ReportPayment.vue'
+
 import Topic from '../views/Menu/Topic'
 import FillLoss from '../views/Menu/union/FillLoss'
 import FillLossDetail from '../views/Menu/union/FillLossDetail'
@@ -46,7 +48,12 @@ const routes = [
         component: Ship
       }
     ]
-  }
+  },
+  {
+    path: '/reportPayment',
+    name: 'ReportPayment',
+    component: ReportPayment
+  },
 ]
 
 const router = createRouter({

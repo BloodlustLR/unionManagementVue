@@ -7,7 +7,7 @@
         </div>
         <div class="menu">
             <div v-for="(item ,index) in menuList" :key="index">
-                <div class="menu-title" :style="{'background-color':item.color}">{{item.title}}</div>
+                <div class="menu-title" :style="{'background-color':item.color}" v-show="item.children.length>0">{{item.title}}</div>
                 <div v-for="(subItem ,subIndex) in item.children" :key="index+'_'+subIndex">
                     <el-tooltip effect="dark" :content="subItem.title" :disabled="!isCollapse" placement="right">
                         <div class="menu-item" @click="clickMenu(subItem)">
@@ -67,45 +67,17 @@ export default {
                     title:"补损办公室",
                     allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
                     path:"fillloss"
-                },
-                {
-                    icon:require("@/assets/km.png"),
-                    title:"KM统计",
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
-                    path:""
                 }]
             },
             {
                 title:'军团',
                 color: 'darkgreen',
-                children:[{
-                    icon:require("@/assets/ship.png"),
-                    title:"补损办公室",
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
-                    path:"fillloss"
-                },
-                {
-                    icon:require("@/assets/km.png"),
-                    title:"KM统计",
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
-                    path:""
-                }]
+                children:[]
             },
             {
                 title:'个人',
                 color: 'blue',
-                children:[{
-                    icon:require("@/assets/ship.png"),
-                    title:"补损办公室",
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
-                    path:"fillloss"
-                },
-                {
-                    icon:require("@/assets/km.png"),
-                    title:"KM统计",
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
-                    path:""
-                }]
+                children:[]
             },
             {
                 title:'系统',
