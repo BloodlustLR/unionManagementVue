@@ -6,7 +6,7 @@
     </div>
     <div class="tree-board">
         <el-input v-model="filterText" placeholder="请输入搜索关键词" />
-        <el-tree ref="tree" :data="data" :props="defaultProps" :filter-node-method="filterNode" show-checkbox default-expand-all>
+        <el-tree ref="tree" :data="data" :props="defaultProps" :filter-node-method="filterNode" default-expand-all>
             <template #default="{ node, data}">
             <div v-if="node.level == 1" style="width:100%;">
                 <div class="tree-title" style="font-size:14px;">{{ node.label }}</div>
