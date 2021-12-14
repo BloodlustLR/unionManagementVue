@@ -151,6 +151,18 @@ module.exports = {
                     '^/api': ''//重写之后url为 http://localhost:8080/xxxx
                 } 
                 //pathRewrite: {'^/api': '/api'} //重写之后url为 http://localhost:8080/api/xxxx
+            },
+            '/imgocr':{
+                target: 'http://1001.jzzlkj.top:81/imgocr',//代理地址，这里设置的地址会代替axios中设置的baseURL
+                changeOrigin: true,// 如果接口跨域，需要进行这个参数配置
+                ws: true, // proxy websockets
+                secure: false, //忽略https安全提示
+                //xfwd：false, //添加x-forward标头
+                //pathRewrite方法重写url
+                pathRewrite: {
+                    '^/imgocr': ''//重写之后url为 http://localhost:8080/xxxx
+                } 
+                //pathRewrite: {'^/api': '/api'} //重写之后url为 http://localhost:8080/api/xxxx
             }
         }
     },
