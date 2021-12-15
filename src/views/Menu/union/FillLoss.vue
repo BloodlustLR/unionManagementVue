@@ -42,7 +42,7 @@
                     <el-button type="primary" size="small" style="margin-left:50px;" @click="configStandardPayment">提交</el-button>
                     <el-button type="danger" size="small" style="margin-left:50px;" @click="removeStandardPayment">删除</el-button>
                 </div>
-                <div style="margin-top:10px;padding-left:30px;height:540px;">
+                <div style="margin-top:10px;padding-left:30px;height:440px;overflow-y:auto">
                     <el-tree ref="shipTree" node-key="id" :data="shipTree" show-checkbox @check-change="handleCheckChange"/>
                 </div>
             </div>
@@ -65,7 +65,7 @@
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 补损标准:<el-select v-model="addPaymentInfo.standardList" placeholder="选择要使用的补损标准" style="width:400px;margin-left:10px;" filterable multiple>
-                            <el-option v-for="(item,index) in standardList" :key="'standard_'+index" :label="item.name" :value="index"></el-option>
+                            <el-option v-for="(item,index) in standardList" :key="'standard_'+index" :label="item.name" :value="item.id"></el-option>
                         </el-select>
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
