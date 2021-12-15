@@ -198,7 +198,7 @@ export default {
         },
 
         filterAll(pageNum){
-            if(pageNum && pageNum instanceof Number){
+            if(pageNum&&typeof pageNum === 'number'){
                 this.filter.pageNum = pageNum;
             }
             this.$request.post("/payment/pagePayment",this.filter).then(res =>{

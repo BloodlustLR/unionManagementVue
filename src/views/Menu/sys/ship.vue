@@ -68,7 +68,7 @@
         </div>
         <template #footer>
             <span class="dialog-footer">
-                <el-button @click="addArmyModal = false">取消</el-button>
+                <el-button @click="addShipModal = false">取消</el-button>
                 <el-button type="primary" @click="addShip">新增</el-button>
             </span>
         </template>
@@ -137,9 +137,10 @@ export default {
     },
     methods:{
         filterAll(pageNum){
-            if(pageNum && pageNum instanceof Number){
+            if(pageNum&&typeof pageNum === 'number'){
                 this.filter.pageNum = pageNum;
             }
+            console.log(this.filter.pageNum);
             this.$request.post("/ship/pageShip",this.filter).then(res =>{
                 this.tableData = res.obj.records;
                 this.filter.pageNum = res.obj.current;
