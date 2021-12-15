@@ -18,7 +18,6 @@
     </div>
 
     <div class="list">
-
         <div v-for="(detectResult,key,index) in detectResultList" :key="index" class="list-item">
             <el-card class="box-card" style="height:220px;width:90%;margin:10px auto;text-align:left">
                 <div class="report-item">编号: {{detectResult.reportId}}</div>
@@ -34,7 +33,7 @@
                 <div class="report-item">最高伤害: {{detectResult.highATKShip}}</div>
 
                 <div class="box-remove" @click="removeResult(detectResult.reportId)">X</div>
-                <!-- <div class="box-img"><img :src="detectResult.img"/></div> -->
+                <div class="box-info" v-if="detectResult.info">{{detectResult.info}}</div>
             </el-card>
         </div>
         <div style="margin-top:10px;">
@@ -220,6 +219,7 @@ export default {
                     return;
                 }
             }
+            response.obj.info = undefined;
             response.obj.paymentId = this.paymentInfo.id;
             this.detectResultList[response.obj.reportId]=response.obj;
         },
@@ -316,6 +316,10 @@ function isEmpty(value) {
             top:0;
         }
 
+        .header-right:hover{
+            cursor: pointer;
+        }
+
     }
 
     .list{
@@ -351,6 +355,14 @@ function isEmpty(value) {
                         height:90px;
                         width:120px;
                     }
+                }
+
+                .box-info{
+                    position: absolute;
+                    right:20px;
+                    bottom:20px;
+                    color:tomato;
+
                 }
 
             }
