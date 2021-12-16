@@ -65,7 +65,7 @@ export default {
                 children:[{
                     icon:require("@/assets/ship.png"),
                     title:"补损办公室",
-                    allow:["超级管理员","联盟管理员","军团管理员","普通会员"],
+                    allow:["超级管理","联盟管理"],
                     path:"fillloss"
                 }]
             },
@@ -85,14 +85,20 @@ export default {
                 children:[
                     {
                         icon:require("@/assets/ship.png"),
+                        title:"用户管理",
+                        allow:["超级管理"],
+                        path:"userManage"
+                    },
+                    {
+                        icon:require("@/assets/ship.png"),
                         title:"联盟军团库",
-                        allow:["超级管理员"],
+                        allow:["超级管理"],
                         path:"unionArmy"
                     },
                     {
                         icon:require("@/assets/ship.png"),
                         title:"舰船库",
-                        allow:["超级管理员"],
+                        allow:["超级管理"],
                         path:"ship"
                     },                    
                 ]
