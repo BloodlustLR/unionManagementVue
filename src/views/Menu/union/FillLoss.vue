@@ -3,7 +3,6 @@
     <div class="action-board">
         <el-button type="primary" @click="openAddPaymentModal">新建补损</el-button>
         <el-button type="success" @click="openStandardPaymentModal" style="margin-right:240px;">补损标准</el-button>
-
         发布日期:<el-date-picker v-model="filter.dateRange" type="daterange" range-separator="至" start-placeholder="起始日期" end-placeholder="结束日期" style="margin-left:10px"></el-date-picker>
         <el-button type="primary" @click="filterAll" style="margin-left:20px">查询</el-button>
     </div>
@@ -16,7 +15,7 @@
             <el-table-column label="操作" width="300">
                 <template #default="scope">
                     <el-button type="success" size="small" @click="copyLink(scope.row.id)">复制链接</el-button>
-                    <el-button type="primary" size="small" @click="checkDetail">查看详情</el-button>
+                    <el-button type="primary" size="small" @click="checkDetail(scope.row.id)">查看详情</el-button>
                     <el-button type="danger" size="small" @click="removePayment(scope.row.id)">删除</el-button>
                 </template>
             </el-table-column>
@@ -63,7 +62,7 @@
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 截止时间:<el-date-picker v-model="addPaymentInfo.endTime" type="datetime" placeholder="请选择截止时间" style="width:200px;margin-left:10px;"></el-date-picker>
             </div>
-            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+            <div style="width:600px;margin:0 auto;text-align:left;">
                 补损标准:<el-select v-model="addPaymentInfo.standardList" placeholder="选择要使用的补损标准" style="width:400px;margin-left:10px;" filterable multiple>
                             <el-option v-for="(item,index) in standardList" :key="'standard_'+index" :label="item.name" :value="item.id"></el-option>
                         </el-select>
@@ -71,14 +70,14 @@
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 限制时间:<el-switch v-model="addPaymentInfo.hasLimitTime" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
             </div>
-            <div v-show="addPaymentInfo.hasLimitTime" style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+            <div v-show="addPaymentInfo.hasLimitTime" style="width:600px;margin:0 auto;text-align:left;">
                 <el-date-picker v-model="addPaymentInfo.limitTime" type="datetimerange" range-separator="至" start-placeholder="起始时间" end-placeholder="结束时间"></el-date-picker>
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 限制地区:<el-switch v-model="addPaymentInfo.hasLimitArea" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
                 <div v-show="addPaymentInfo.hasLimitArea" class="element-add" @click="addPaymentInfo.limitAreaList.push('')">+</div>
             </div>
-            <div v-show="addPaymentInfo.hasLimitArea" style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+            <div v-show="addPaymentInfo.hasLimitArea" style="width:600px;margin:0 auto;text-align:left;">
                 <div v-for="(item,index) in addPaymentInfo.limitAreaList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
                     <el-input v-model="addPaymentInfo.limitAreaList[index]" placeholder="请输入地区名" size="mini" style="width:120px;margin-left:10px;"/>
                     <div class="element-remove" @click="addPaymentInfo.limitAreaList.splice(index,1)">x</div>
@@ -88,7 +87,7 @@
                 限制星域:<el-switch v-model="addPaymentInfo.hasLimitConstellation" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
                 <div v-show="addPaymentInfo.hasLimitConstellation" class="element-add" @click="addPaymentInfo.limitConstellationList.push('')">+</div>
             </div>
-            <div v-show="addPaymentInfo.hasLimitConstellation" style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+            <div v-show="addPaymentInfo.hasLimitConstellation" style="width:600px;margin:0 auto;text-align:left;">
                 <div v-for="(item,index) in addPaymentInfo.limitConstellationList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
                     <el-input v-model="addPaymentInfo.limitConstellationList[index]" placeholder="请输入星域名" size="mini" style="width:120px;margin-left:10px;"/>
                     <div class="element-remove" @click="addPaymentInfo.limitConstellationList.splice(index,1)">x</div>
@@ -98,7 +97,7 @@
                 限制星系:<el-switch v-model="addPaymentInfo.hasLimitGalaxy" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
                 <div v-show="addPaymentInfo.hasLimitGalaxy" class="element-add" @click="addPaymentInfo.limitGalaxyList.push('')">+</div>
             </div>
-            <div v-show="addPaymentInfo.hasLimitGalaxy" style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+            <div v-show="addPaymentInfo.hasLimitGalaxy" style="width:600px;margin:0 auto;text-align:left;">
                 <div v-for="(item,index) in addPaymentInfo.limitGalaxyList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
                     <el-input v-model="addPaymentInfo.limitGalaxyList[index]" placeholder="请输入星系名" size="mini" style="width:120px;margin-left:10px;"/>
                     <div class="element-remove" @click="addPaymentInfo.limitGalaxyList.splice(index,1)">x</div>
@@ -121,7 +120,6 @@ export default {
 
     data(){
         return{
-
             standardModal:false,
             standardInfo:{
                 id:null,
@@ -165,8 +163,13 @@ export default {
         this.filterAll();
     },
     methods:{
-        checkDetail(){
-            this.$router.push("/home/filllossDetail");
+        checkDetail(id){
+            this.$router.push({
+                path:"/home/filllossDetail",
+                query:{
+                    pid:id
+                }
+            });
         },
 
         copyLink(id){

@@ -6,6 +6,7 @@ import ReportPayment from '../views/ReportPayment.vue'
 import Topic from '../views/Menu/Topic'
 import FillLoss from '../views/Menu/union/FillLoss'
 import FillLossDetail from '../views/Menu/union/FillLossDetail'
+import UserManage from '../views/Menu/sys/userManage'
 
 import UnionArmy from '../views/Menu/sys/unionArmy'
 import Ship from '../views/Menu/sys/ship'
@@ -46,6 +47,11 @@ const routes = [
         path:'ship',
         name:'Ship',
         component: Ship
+      },
+      {
+        path:'userManage',
+        name:'UserManage',
+        component: UserManage
       }
     ]
   },
