@@ -1,6 +1,6 @@
 <template>
-<div class="fillLossDetail">
-    <div class="main-board">
+<div class="killCountDetail">
+<div class="main-board">
         <div class="display-type">
             <el-radio-group v-model="displayType" size="small" @change="changeLabel">
                 <el-radio-button label="detail">详情</el-radio-button>
@@ -11,40 +11,36 @@
         <div class="content">
             <div class="detail" v-show="displayType=='detail'">
                 <div class="detail-left">
-                    <div class="payment-box">
-                        <div class="payment-item" style="font-weight:bolder">补损编号- {{paymentInfo.id}}</div>
-                        <div class="payment-item" style="font-weight:bolder">补损名- {{paymentInfo.name}}</div>
-                        <div class="payment-item" style="font-weight:bolder">起始时间- {{paymentInfo.lossStartTime}}</div>
-                        <div class="payment-item" style="font-weight:bolder">结束时间- {{paymentInfo.lossEndTime}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许地区- {{paymentInfo.limitArea}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许星域- {{paymentInfo.limitConstellation}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许星系- {{paymentInfo.limitGalaxy}}</div>
-                        <div class="payment-item" style="font-weight:bolder">截止时间- {{paymentInfo.endTime}}</div>
-                        <div class="payment-item" style="font-weight:bolder;margin-top:20px">损失总额:  {{Math.round(totalLoss/100000000)}}亿星币</div>
-                        <div class="payment-item" style="font-weight:bolder">补损总额:  {{totalPrice/100000000}}亿星币</div>
+                    <div class="killReport-box">
+                        <div class="killReport-item" style="font-weight:bolder">补损编号- {{killReportInfo.id}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">补损名- {{killReportInfo.name}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">起始时间- {{killReportInfo.killStartTime}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">结束时间- {{killReportInfo.killEndTime}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">允许地区- {{killReportInfo.limitArea}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">允许星域- {{killReportInfo.limitConstellation}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">允许星系- {{killReportInfo.limitGalaxy}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">截止时间- {{killReportInfo.endTime}}</div>
+                        <div class="killReport-item" style="font-weight:bolder;margin-top:20px">击杀总额:  {{Math.round(totalKill/100000000)}}亿星币</div>
                     </div>
                     <div class="army-box">
                         <el-tree :data="unionArmyList" :props="defaultProps"  @node-click="handleNodeClick"/>
                     </div>
                 </div>
                 <div class="detail-right">
-                    <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币,军团补损总额: {{armyTotal/100000000}}亿星币</div>
+                    <div class="army-info">军团击杀共计:{{Math.round(armyTotal/100000000)}}亿星币</div>
                     <div class="army-detail">
-                        <div class="detail-item" v-for="(item,index) in armyLossList" :key="'armyLoss_'+index">
+                        <div class="detail-item" v-for="(item,index) in armyKillList" :key="'armyLoss_'+index">
                             <el-card :class="{'box-card':true,'box-card-modify':item.isModify}" style="height:220px;width:90%;margin:10px auto;text-align:left">
                                 <div class="report-item">编号: {{item.id}}</div>
                                 <div class="report-item">舰船名: {{item.shipName}}</div>
-                                <div class="report-item">时间: {{item.lossTime}}</div>
+                                <div class="report-item">时间: {{item.killTime}}</div>
                                 <div class="report-item">星域: {{item.area}}</div>
                                 <div class="report-item">星座: {{item.constellation}}</div>
                                 <div class="report-item">星系: {{item.galaxy}}</div>
                                 <div class="report-item">金额: {{item.num}}星币</div>
-                                <div class="report-item">最后一击: {{item.kmShip}}</div>
-                                <div class="report-item">最高伤害: {{item.highAtkShip}}</div>
 
-                                <div class="box-remove" @click="removeLoss(index)">X</div>
+                                <div class="box-remove" @click="removeKill(index)">X</div>
                                 <div class="box-info">
-                                    <span style="margin-right:20px">{{item.price/100000000}}亿星币</span>
                                     <el-button type="primary" size="mini" @click="openImgModal(item.img)">查看截图</el-button>
                                 </div>
                             </el-card>
@@ -53,8 +49,8 @@
                 </div>
             </div>
             <div class="count" v-if="displayType=='count'">
-                <div id="army_count" class="count-item"></div>
-                <div id="ship_type_count" class="count-item"></div>
+                <div id="army_rank" class="count-item"></div>
+                <div id="area_count" class="count-item"></div>
             </div>
         </div>
     </div>
@@ -77,20 +73,17 @@ export default {
     data(){
         return{
             displayType:'detail',
-
-            paymentInfo:{
+            killReportInfo:{
                 id:null,
                 name:null,
                 endTime:null,
-                lossStartTime:null,
-                lossEndTime:null,
+                killStartTime:null,
+                killEndTime:null,
                 limitArea:[],
                 limitConstellation:[],
                 limitGalaxy:[]
             },
-            paymentShipList:[],
-            totalLoss:0,
-            totalPrice:0,
+            totalKill:0,
 
             unionArmyList:[],
             defaultProps: {
@@ -98,37 +91,30 @@ export default {
                 label: 'name',
             },
 
-            armyLossList:[],
+            armyKillList:[],
             imgModal:false,
             imgSrc:''
         }
     },
     computed:{
-        armyLossTotal(){
+        armyTotal () {
             let total = 0;
-            for(let armLoss of this.armyLossList){
+            for(let armLoss of this.armyKillList){
                 if(armLoss.num){
                     total+=armLoss.num;
                 }
             }
             return total;
-        },
-        armyTotal () {
-            let total = 0;
-            for(let armLoss of this.armyLossList){
-                if(armLoss.price){
-                    total+=armLoss.price;
-                }
-            }
-            return total;
         }
     },
+    created(){
+
+    },
     mounted(){
-        this.paymentInfo.id = this.$route.query.pid;
+        this.killReportInfo.id = this.$route.query.pid;
         this.refreshAllDetail();
     },
     methods:{
-
         changeLabel(value){
             if(value == "detail"){
                 this.$nextTick(()=>{
@@ -142,80 +128,43 @@ export default {
         },
 
         refreshAllDetail(){
-            this.getPaymentInfo();
-            this.getPymentShipList();
-            this.getPaymentTotal();
-            this.getPaymentUnionArmy();
+            this.getKillReportInfo();
+            this.getKillReportTotal();
+            this.getKillReportUnionArmy();
         },
 
         refreshAllDiagram(){
-            this.getPaymentAllArmyLoss();
-            this.getPaymentAllTypeLoss();
+            this.getAllArmyRank();
+            this.getAreaKill();
         },
 
-        getPaymentInfo(){
-            this.$request.get("/payment/getPaymentInfo",{
-                pid:this.paymentInfo.id
+        getAllArmyRank(){
+            this.$request.get("/kill/getAllArmyRank",{
+                pid:this.killReportInfo.id
             }).then(res=>{
-                this.paymentInfo.name = res.obj.name;
-                this.paymentInfo.endTime = res.obj.endTime;
-                this.paymentInfo.lossStartTime = res.obj.lossStartTime;
-                this.paymentInfo.lossEndTime = res.obj.lossEndTime;
-                this.paymentInfo.limitArea = JSON.parse(res.obj.limitArea);
-                this.paymentInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
-                this.paymentInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
-            })
-        },
-
-        getPymentShipList(){
-            this.$request.get("/payment/getPaymentShipList",{
-                pid:this.paymentInfo.id
-            }).then(res=>{
-                console.log("paymentShip",res.obj);
-                this.paymentShipList = res.obj;
-            })
-        },
-
-        getPaymentTotal(){
-            this.$request.get("/payment/getPaymentTotal",{
-                pid:this.paymentInfo.id
-            }).then(res=>{
-                this.totalLoss = res.obj.lossTotal;
-                this.totalPrice = res.obj.priceTotal;
-            })
-        },
-
-        getPaymentUnionArmy(){
-            this.$request.get("/payment/getPaymentUnionArmy",{
-                pid:this.paymentInfo.id
-            }).then(res=>{
-                this.unionArmyList = res.obj;
-                console.log(this.unionArmyList);
-            })
-        },
-
-        getPaymentAllArmyLoss(){
-
-            this.$request.get("/loss/getPaymentAllArmyLoss",{
-                pid:this.paymentInfo.id
-            }).then(res=>{
-                console.log("loss",res.obj);
-                if(window.armyLossDiagram){
-                    window.armyLossDiagram.dispose(); // 销毁实例
+                console.log("killRank",res.obj);
+                if(window.armyRankDiagram){
+                    window.armyRankDiagram.dispose(); // 销毁实例
                 }
-                window.armyLossDiagram = echarts.init(document.getElementById('army_count'));// 再次创建实例
-                debugger
-                let category = [];
-                let data = [];
+                window.armyRankDiagram = echarts.init(document.getElementById('army_rank'));// 再次创建实例
+
                 let sortData = [];
                 for(let armyName in res.obj){
-                    category.push(armyName);
-                    data.push(res.obj[armyName]);
-                    sortData.push(res.obj[armyName]);
+                    sortData.push({
+                        name:armyName,
+                        num:Number(res.obj[armyName])
+                    })
                 }
-                sortData.sort();
-                let max = parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000;
-                debugger
+
+                sortData.sort(compare("num"));
+                console.log(sortData);
+                let max = parseInt(sortData[sortData.length-1].num/100000000)*100000000+1000000000;
+                let category = [];
+                let data = [];
+                for(let item of sortData){
+                    category.push(item.name);
+                    data.push(item.num);
+                }
                 let option = {
                     backgroundColor:'#323a5e',
                         tooltip: {
@@ -232,7 +181,7 @@ export default {
                             containLabel: true
                         },
                         legend: {
-                        data: ['损失KM'],
+                        data: ['击杀KM'],
                         right: 10,
                         top:12,
                         textStyle: {
@@ -303,7 +252,7 @@ export default {
                         "end": 35
                     }],
                     series: [{
-                        name: '损失KM',
+                        name: '击杀KM',
                         type: 'bar',
                         barWidth: '15%',
                         itemStyle: {
@@ -322,27 +271,26 @@ export default {
                     }]
                 };
                 // 绘制图表
-                armyLossDiagram.setOption(option);
+                armyRankDiagram.setOption(option);
             })
         },
 
-        getPaymentAllTypeLoss(){
-            this.$request.get("/loss/getPaymentAllTypeLoss",{
-                pid:this.paymentInfo.id
+        getAreaKill(){
+            this.$request.get("/kill/getAllAreaKill",{
+                pid:this.killReportInfo.id
             }).then(res=>{
-                console.log("loss",res.obj);
-                if(window.shipTypeLossDiagram){
-                    window.shipTypeLossDiagram.dispose(); // 销毁实例
+                if(window.areaKillDiagram){
+                    window.areaKillDiagram.dispose(); // 销毁实例
                 }
-                window.shipTypeLossDiagram = echarts.init(document.getElementById('ship_type_count'));
+                window.areaKillDiagram = echarts.init(document.getElementById('area_count'));
 
                 let category = [];
                 let data = [];
                 let sortData = [];
-                for(let shipType in res.obj){
-                    category.push(shipType);
-                    data.push(res.obj[shipType]);
-                    sortData.push(res.obj[shipType]);
+                for(let area in res.obj){
+                    category.push(area);
+                    data.push(res.obj[area]);
+                    sortData.push(res.obj[area]);
                 }
                 sortData.sort();
                 let max = parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000;
@@ -363,7 +311,7 @@ export default {
                             containLabel: true
                         },
                         legend: {
-                        data: ['损失KM'],
+                        data: ['击杀KM'],
                         right: 10,
                         top:12,
                         textStyle: {
@@ -434,7 +382,7 @@ export default {
                         "end": 35
                     }],
                     series: [{
-                        name: '损失KM',
+                        name: '击杀KM',
                         type: 'bar',
                         barWidth: '15%',
                         itemStyle: {
@@ -453,38 +401,60 @@ export default {
                     }]
                 };
                 // 绘制图表
-                shipTypeLossDiagram.setOption(option);
+                areaKillDiagram.setOption(option);
+            })
+        },
+
+        getKillReportInfo(){
+            this.$request.get("/killReport/getKillReportInfo",{
+                pid:this.killReportInfo.id
+            }).then(res=>{
+                this.killReportInfo.name = res.obj.name;
+                this.killReportInfo.endTime = res.obj.endTime;
+                this.killReportInfo.killStartTime = res.obj.killStartTime;
+                this.killReportInfo.killEndTime = res.obj.killEndTime;
+                this.killReportInfo.limitArea = JSON.parse(res.obj.limitArea);
+                this.killReportInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
+                this.killReportInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+            })
+        },
+
+        getKillReportTotal(){
+            this.$request.get("/killReport/getKillReportTotal",{
+                pid:this.killReportInfo.id
+            }).then(res=>{
+                this.totalKill = res.obj.killTotal;
+            })
+        },
+
+        getKillReportUnionArmy(){
+            this.$request.get("/killReport/getKillReportUnionArmy",{
+                pid:this.killReportInfo.id
+            }).then(res=>{
+                this.unionArmyList = res.obj;
+                console.log(this.unionArmyList);
             })
         },
 
         handleNodeClick(data,node){
             if(node.level!=2)return;
-            this.getPaymentArmyLoss(data.id);
+            this.getKillReportArmyKill(data.id);
         },
 
-        getPaymentArmyLoss(armyId){
-            this.$request.post("/loss/getPaymentArmyLoss",{
-                paymentId:this.paymentInfo.id,
+        getKillReportArmyKill(armyId){
+            this.$request.post("/kill/getKillReportArmyKill",{
+                killReportId:this.killReportInfo.id,
                 armyId:armyId
             }).then(res=>{
-                this.armyLossList = res.obj;
-
-                for(let item of this.armyLossList){
-                    for(let standardShip of this.paymentShipList){
-                        if(item.shipName == standardShip.name){
-                            item.price = standardShip.price;
-                            break;
-                        }
-                    }
-                }
-                console.log("this.armyLossList",this.armyLossList);
+                this.armyKillList = res.obj;
+                console.log("this.armyKillList",this.armyKillList);
             })
         },
 
-        removeLoss(index){
+        removeKill(index){
             ElMessageBox.confirm(
-                '是否确认删除此报损?',
-                '删除报损',
+                '是否确认删除此击杀?',
+                '删除击杀',
                 {
                     confirmButtonText: '确认',
                     cancelButtonText: '取消',
@@ -492,15 +462,15 @@ export default {
                 }
             )
             .then(() => {
-                this.$request.post("/loss/removeLoss",{
-                    id:this.armyLossList[index].id
+                this.$request.post("/kill/removeKill",{
+                    id:this.armyKillList[index].id
                 }).then(res => {
                     if(res.obj=="success"){
                         ElMessage({
                             message: '删除成功',
                             type: 'success',
                         })
-                        this.armyLossList.splice(index,1);
+                        this.armyKillList.splice(index,1);
                         this.refreshAllDetail();
                     }else{
                         ElMessage.error('删除失败');
@@ -515,11 +485,28 @@ export default {
             this.imgSrc = imgSrc;
             this.imgModal = true;
         }
+
+
+    }
+}
+//定义一个比较器--降序排列
+function compare(propertyName) {
+    console.log(propertyName)
+    return function(object1, object2) {
+        var value1 = object1[propertyName];
+        var value2 = object2[propertyName];
+        if(value2 < value1) {
+            return -1;
+        } else if(value2 > value1) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 }
 </script>
 <style lang="less">
-.fillLossDetail{
+.killCountDetail{
     height:100%;
     width:100%;
     padding-top:20px;
@@ -549,14 +536,14 @@ export default {
                     height:100%;
                     width:30%;
 
-                    .payment-box{
+                    .killReport-box{
                         height:240px;
                         overflow-y: auto;
                         text-align: left;
                         padding-left: 20px;
                         
 
-                        .payment-item{
+                        .killReport-item{
                             height:20px;
                             line-height:20px;
                         }

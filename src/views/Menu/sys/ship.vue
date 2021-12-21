@@ -19,6 +19,7 @@
             <el-option label="战列巡洋舰" value="战列巡洋舰"></el-option>
             <el-option label="战列舰" value="战列舰"></el-option>
             <el-option label="旗舰" value="旗舰"></el-option>
+            <el-option label="工业舰" value="工业舰"></el-option>
         </el-select>
 
         <el-button type="primary" @click="filterAll">查询</el-button>
@@ -60,6 +61,7 @@
                             <el-option label="战列巡洋舰" value="战列巡洋舰"></el-option>
                             <el-option label="战列舰" value="战列舰"></el-option>
                             <el-option label="旗舰" value="旗舰"></el-option>
+                            <el-option label="工业舰" value="工业舰"></el-option>
                         </el-select>
             </div>
             <div style="width:400px;margin:0 auto;text-align:center;height:60px;line-height:60px">
@@ -88,6 +90,7 @@
                             <el-option label="巡洋舰" value="巡洋舰"></el-option>
                             <el-option label="战列巡洋舰" value="战列巡洋舰"></el-option>
                             <el-option label="旗舰" value="旗舰"></el-option>
+                            <el-option label="工业舰" value="工业舰"></el-option>
                         </el-select>
             </div>
             <div style="width:400px;margin:0 auto;text-align:center;height:60px;line-height:60px">

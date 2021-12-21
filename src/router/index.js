@@ -27,6 +27,11 @@ const routes = [
         component: () => import('../views/Menu/union/KillCount')
       },
       {
+        path: 'killCountDetail',
+        name:'KillCountDetail',
+        component: () => import('../views/Menu/union/KillCountDetail')
+      },
+      {
         path: 'armyFillLoss',
         name:'ArmyFillLoss',
         component: () => import('../views/Menu/army/ArmyFillLoss')
@@ -62,6 +67,11 @@ const routes = [
     path: '/reportPayment',
     name: 'ReportPayment',
     component: () => import('../views/ReportPayment.vue')
+  },
+  {
+    path: '/reportKill',
+    name: 'ReportKill',
+    component: () => import('../views/ReportKill.vue')
   },
 ]
 
