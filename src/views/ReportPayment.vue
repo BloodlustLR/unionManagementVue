@@ -23,17 +23,23 @@
                 <div class="report-item">编号: {{detectResult.reportId}}</div>
                 <div class="report-item">时间: {{detectResult.reportTime}}</div>
                 <div class="report-item">军团简称: {{detectResult.armyShortName}}</div>
-                <div class="report-item">角色名称: {{detectResult.gameId}}</div>
+                <div class="report-item">角色名: {{detectResult.gameId}}</div>
                 <div class="report-item">舰船名: {{detectResult.shipName}}</div>
-                <div class="report-item">地区: {{detectResult.area}}</div>
-                <div class="report-item">星域: {{detectResult.constellation}}</div>
+                <div class="report-item">星域: {{detectResult.area}}</div>
+                <div class="report-item">星座: {{detectResult.constellation}}</div>
                 <div class="report-item">星系: {{detectResult.galaxy}}</div>
-                <div class="report-item">金额: {{detectResult.money}}星币</div>
+                <div class="report-item">金额: {{detectResult.money}}</div>
                 <div class="report-item">最后一击: {{detectResult.kmShip}}</div>
                 <div class="report-item">最高伤害: {{detectResult.highATKShip}}</div>
 
                 <div class="box-remove" @click="removeResult(detectResult.reportId)">X</div>
-                <div class="box-info" v-if="detectResult.info">{{detectResult.info}}</div>
+                <div class="box-info">
+                    <div v-if="detectResult.info">{{detectResult.info}}</div>
+                    <div style="margin-top:10px">
+                        <el-button type="warning" size="mini" @click="openModifyModal(detectResult)">修改</el-button>
+                        <el-button type="primary" size="mini" @click="openImgModal(detectResult.img)">查看截图</el-button>
+                    </div>
+                </div>
             </el-card>
         </div>
         <div style="margin-top:10px;">
@@ -50,6 +56,10 @@
             </el-upload>
             <span v-if="hasOutOfDate">此次补损已截止</span>
         </div>
+        <div style="height:50px;width:100%;"></div>
+        <div class="sumbit-button" @click="submit">
+            提交
+        </div>
     </div>
 
     <el-dialog v-model="detailModal" title="补损详情" width="80%">
@@ -57,14 +67,78 @@
             <div class="payment-item">补损编号-{{paymentInfo.id}}</div>
             <div class="payment-item">补损名-{{paymentInfo.name}}</div>
             <div class="payment-item">允许时间段-{{paymentInfo.lossStartTime}}<span v-show="paymentInfo.lossStartTime!=null&&paymentInfo.lossEndTime!=null">至</span>{{paymentInfo.lossEndTime}}</div>
-            <div class="payment-item">允许地区-{{paymentInfo.limitArea}}</div>
-            <div class="payment-item">允许星域-{{paymentInfo.limitConstellation}}</div>
+            <div class="payment-item">允许星域-{{paymentInfo.limitArea}}</div>
+            <div class="payment-item">允许星座-{{paymentInfo.limitConstellation}}</div>
             <div class="payment-item">允许星系-{{paymentInfo.limitGalaxy}}</div>
             <div class="payment-item">截止时间-{{paymentInfo.endTime}}</div>
         </div>
         <template #footer>
         <span class="dialog-footer">
             <el-button @click="detailModal = false">关闭</el-button>
+        </span>
+        </template>
+    </el-dialog>
+
+    <el-dialog v-model="modifyModal" title="补损详情" width="80%">
+        <div class="modify-box">
+            <div class="modify-item">
+                <span style="margin-right:10px">时间</span>
+                <el-date-picker v-model="lossInfo.reportTime" type="datetime" placeholder="请选择损失时间" disabled></el-date-picker>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">军团简称</span>
+                <el-select v-model="lossInfo.armyShortName" placeholder="请选择军团简称" style="width:220px" filterable>
+                    <el-option v-for="item in armyList" :key="item.shortName" :label="item.shortName" :value="item.shortName"></el-option>
+                </el-select>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">角色名</span>
+                <el-input v-model="lossInfo.gameId" placeholder="请输入角色名" style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">舰船名</span>
+                <el-select v-model="lossInfo.shipName" placeholder="请选择舰船名" style="width:220px" filterable>
+                    <el-option v-for="item in shipList" :key="item.name" :label="item.name" :value="item.name"></el-option>
+                </el-select>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">星域</span>
+                <el-input v-model="lossInfo.area" placeholder="请输入星域" style="width:220px" disabled/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">星座</span>
+                <el-input v-model="lossInfo.constellation" placeholder="请输入星座" style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">星系</span>
+                <el-input v-model="lossInfo.galaxy" placeholder="请输入星系" style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">金额</span>
+                <el-input-number v-model="lossInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">最后一击</span>
+                <el-input v-model="lossInfo.kmShip" placeholder="请输入最后一击舰船名" style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">最高伤害</span>
+                <el-input v-model="lossInfo.highATKShip" placeholder="请输入最高伤害舰船名" style="width:220px"/>
+            </div>
+        </div>
+        <template #footer>
+        <span class="dialog-footer">
+            <el-button type="primary" @click="modifyData">确认</el-button>
+            <el-button @click="modifyModal = false">关闭</el-button>
+        </span>
+        </template>
+    </el-dialog>
+
+    <el-dialog v-model="imgModal" title="截图" width="80%">
+        <img :src="imgSrc" style="width:100%;height:100%;"/>
+        <template #footer>
+        <span class="dialog-footer">
+            <el-button @click="imgModal = false">关闭</el-button>
         </span>
         </template>
     </el-dialog>
@@ -79,6 +153,8 @@ import { reactive } from "vue";
 export default {
     data(){
         return{
+            armyList:[],
+            shipList:[],
             paymentInfo:{
                 id:null,
                 name:null,
@@ -93,16 +169,86 @@ export default {
             uploadUrl:'/api/ocr/detectPic',
             detectResultList:reactive({}),
 
-            detailModal:false
+            detailModal:false,
+            modifyModal:false,
+            lossInfo:{
+                reportId:null,
+                reportTime:null,
+                armyShortName:'',
+                gameId:'',
+                shipName:'',
+                area:'',
+                constellation:'',
+                galaxy:'',
+                money:'',
+                kmShip:'',
+                highATKShip:''
+            },
+            imgSrc:'',
+            imgModal:false
         }
     },
     created(){
         this.paymentInfo.id = this.$route.query.pid;
+        this.getAllArmy();
+        this.getAllShip();
+    },
+    mounted(){
         if(this.paymentInfo.id!=null){
             this.getPaymentInfo();
         }
     },
     methods:{
+        getAllArmy(){
+            this.$request.get("/army/getAllArmy").then(res =>{
+                console.log(res.obj);
+                this.armyList = res.obj;
+            })
+        },
+
+        getAllShip(){
+            this.$request.get("/ship/getAllShip").then(res =>{
+                console.log(res.obj);
+                this.shipList = res.obj;
+            })
+        },
+
+
+        openModifyModal(value){
+            console.log(value);
+            this.lossInfo.reportId = value.reportId;
+            this.lossInfo.reportTime = value.reportTime==null?null:new Date(value.reportTime);
+            this.lossInfo.armyShortName = value.armyShortName;
+            this.lossInfo.gameId = value.gameId;
+            this.lossInfo.shipName = value.shipName;
+            this.lossInfo.area = value.area;
+            this.lossInfo.constellation = value.constellation;
+            this.lossInfo.galaxy = value.galaxy;
+            this.lossInfo.money = Number(value.money);
+            this.lossInfo.kmShip = value.kmShip;
+            this.lossInfo.highATKShip = value.highATKShip;
+            this.modifyModal = true;
+        },
+
+        modifyData(){
+            this.detectResultList[this.lossInfo.reportId].reportTime = this.lossInfo.reportTime.format("yyyy-MM-dd hh:mm:ss");
+            this.detectResultList[this.lossInfo.reportId].armyShortName = this.lossInfo.armyShortName;
+            this.detectResultList[this.lossInfo.reportId].gameId = this.lossInfo.gameId;
+            this.detectResultList[this.lossInfo.reportId].shipName = this.lossInfo.shipName;
+            this.detectResultList[this.lossInfo.reportId].area = this.lossInfo.area;
+            this.detectResultList[this.lossInfo.reportId].constellation = this.lossInfo.constellation;
+            this.detectResultList[this.lossInfo.reportId].galaxy = this.lossInfo.galaxy;
+            this.detectResultList[this.lossInfo.reportId].money = this.lossInfo.money;
+            this.detectResultList[this.lossInfo.reportId].kmShip = this.lossInfo.kmShip;
+            this.detectResultList[this.lossInfo.reportId].highATKShip = this.lossInfo.highATKShip;
+            this.detectResultList[this.lossInfo.reportId].isModify = true;
+            this.modifyModal = false;
+        },
+
+        openImgModal(imgSrc){
+            this.imgSrc = imgSrc;
+            this.imgModal = true;
+        },
         getPaymentInfo(){
             this.$request.get("/payment/getPaymentInfo",{
                 pid:this.paymentInfo.id
@@ -141,14 +287,14 @@ export default {
                 ElMessage.error('识别结果缺失报告编号，请换一张图试试');
                 return;
             }
-            if(isEmpty(response.obj.gameId)&&isEmpty(response.obj.armyShortName)){
-                ElMessage.error('识别结果缺失身份信息，请换一张图试试');
-                return;
-            }
-            if(isEmpty(response.obj.shipName)){
-                ElMessage.error('识别结果缺失舰船名，请换一张图试试');
-                return;
-            }
+            // if(isEmpty(response.obj.gameId)&&isEmpty(response.obj.armyShortName)){
+            //     ElMessage.error('识别结果缺失身份信息，请换一张图试试');
+            //     return;
+            // }
+            // if(isEmpty(response.obj.shipName)){
+            //     ElMessage.error('识别结果缺失舰船名，请换一张图试试');
+            //     return;
+            // }
 
             if(!isEmpty(this.paymentInfo.lossStartTime)){
                 if(!isEmpty(response.obj.reportTime)){
@@ -186,18 +332,6 @@ export default {
             if(!isEmpty(this.paymentInfo.limitArea)){
                 if(!isEmpty(response.obj.area)){
                     if(this.paymentInfo.limitArea.indexOf(response.obj.area)==-1){
-                        ElMessage.error('地区不合规');
-                        return;
-                    }
-                }else{
-                    ElMessage.error('识别结果缺失地区，请换一张图试试');
-                    return;
-                }
-            }
-
-            if(!isEmpty(this.paymentInfo.constellation)){
-                if(!isEmpty(response.obj.constellation)){
-                    if(this.paymentInfo.limitConstellation.indexOf(response.obj.constellation)==-1){
                         ElMessage.error('星域不合规');
                         return;
                     }
@@ -207,19 +341,32 @@ export default {
                 }
             }
 
+            // if(!isEmpty(this.paymentInfo.constellation)){
+            //     if(!isEmpty(response.obj.constellation)){
+            //         if(this.paymentInfo.limitConstellation.indexOf(response.obj.constellation)==-1){
+            //             ElMessage.error('星域不合规');
+            //             return;
+            //         }
+            //     }else{
+            //         ElMessage.error('识别结果缺失星域，请换一张图试试');
+            //         return;
+            //     }
+            // }
 
-            if(!isEmpty(this.paymentInfo.limitGalaxy)){
-                if(!isEmpty(response.obj.galaxy)){
-                    if(this.paymentInfo.limitGalaxy.indexOf(response.obj.galaxy)==-1){
-                        ElMessage.error('星系不合规');
-                        return;
-                    }
-                }else{
-                    ElMessage.error('识别结果缺失星系，请换一张图试试');
-                    return;
-                }
-            }
+
+            // if(!isEmpty(this.paymentInfo.limitGalaxy)){
+            //     if(!isEmpty(response.obj.galaxy)){
+            //         if(this.paymentInfo.limitGalaxy.indexOf(response.obj.galaxy)==-1){
+            //             ElMessage.error('星系不合规');
+            //             return;
+            //         }
+            //     }else{
+            //         ElMessage.error('识别结果缺失星系，请换一张图试试');
+            //         return;
+            //     }
+            // }
             response.obj.info = undefined;
+            response.obj.isModify = false;
             response.obj.paymentId = this.paymentInfo.id;
             this.detectResultList[response.obj.reportId]=response.obj;
         },
@@ -297,6 +444,14 @@ function isEmpty(value) {
         }
     }
 
+    .modify-box{
+
+        .modify-item{
+            height:45px;
+            line-height:45px;
+        }
+    }
+
 
     .header{
         height:60px;
@@ -366,6 +521,22 @@ function isEmpty(value) {
                 }
 
             }
+        }
+
+        .sumbit-button{
+            position:fixed;
+            color:white;
+            bottom:20px;
+            right:20px;
+            height:80px;
+            line-height:80px;
+            width:80px;
+            border-radius: 40px;
+            background-color: rgb(64,134,226);
+        }
+
+        .sumbit-button:hover{
+            cursor: pointer;
         }
     }
 }

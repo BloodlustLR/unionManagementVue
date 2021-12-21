@@ -362,7 +362,6 @@ function isEmpty(value) {
     }
 
     .main-board{
-        height:calc(80% - 60px);
         width:90%;
         margin:0 auto;
         background-color: white;

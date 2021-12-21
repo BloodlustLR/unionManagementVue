@@ -74,22 +74,22 @@
                 <el-date-picker v-model="addPaymentInfo.limitTime" type="datetimerange" range-separator="至" start-placeholder="起始时间" end-placeholder="结束时间"></el-date-picker>
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
-                限制地区:<el-switch v-model="addPaymentInfo.hasLimitArea" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+                限制星域:<el-switch v-model="addPaymentInfo.hasLimitArea" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
                 <div v-show="addPaymentInfo.hasLimitArea" class="element-add" @click="addPaymentInfo.limitAreaList.push('')">+</div>
             </div>
             <div v-show="addPaymentInfo.hasLimitArea" style="width:600px;margin:0 auto;text-align:left;">
                 <div v-for="(item,index) in addPaymentInfo.limitAreaList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
-                    <el-input v-model="addPaymentInfo.limitAreaList[index]" placeholder="请输入地区名" size="mini" style="width:120px;margin-left:10px;"/>
+                    <el-input v-model="addPaymentInfo.limitAreaList[index]" placeholder="请输入星域名" size="mini" style="width:120px;margin-left:10px;"/>
                     <div class="element-remove" @click="addPaymentInfo.limitAreaList.splice(index,1)">x</div>
                 </div>
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
-                限制星域:<el-switch v-model="addPaymentInfo.hasLimitConstellation" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+                限制星座:<el-switch v-model="addPaymentInfo.hasLimitConstellation" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
                 <div v-show="addPaymentInfo.hasLimitConstellation" class="element-add" @click="addPaymentInfo.limitConstellationList.push('')">+</div>
             </div>
             <div v-show="addPaymentInfo.hasLimitConstellation" style="width:600px;margin:0 auto;text-align:left;">
                 <div v-for="(item,index) in addPaymentInfo.limitConstellationList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
-                    <el-input v-model="addPaymentInfo.limitConstellationList[index]" placeholder="请输入星域名" size="mini" style="width:120px;margin-left:10px;"/>
+                    <el-input v-model="addPaymentInfo.limitConstellationList[index]" placeholder="请输入星座名" size="mini" style="width:120px;margin-left:10px;"/>
                     <div class="element-remove" @click="addPaymentInfo.limitConstellationList.splice(index,1)">x</div>
                 </div>
             </div>
@@ -173,11 +173,7 @@ export default {
         },
 
         copyLink(id){
-
-            console.log();
-
-            let url = window.location.host+"/#/reportPayment?pid="+id;
-
+            let url = "http://"+window.location.host+"/#/reportPayment?pid="+id;
             copyText(url);
             ElMessage({
                 message: '补损链接已复制到剪贴板',
@@ -220,9 +216,16 @@ export default {
         },
 
         openAddPaymentModal(){
+
+            let tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate()+1);
+            tomorrow.setHours(18);
+            tomorrow.setMinutes(0);
+            tomorrow.setSeconds(0);
+
             this.addPaymentInfo={
                 name:'',
-                endTime:new Date(),
+                endTime:tomorrow,
                 standardList:[],
                 hasLimitTime:false,
                 limitTime:[new Date(),new Date()],
@@ -486,7 +489,6 @@ function isEmpty(value) {
     }
 
     .main-board{
-        height:calc(80% - 60px);
         width:90%;
         margin:0 auto;
         background-color: white;

@@ -9,6 +9,7 @@ import './reset.css'
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import dateFormat from './plugins/dateformat'
 
 
-createApp(App).use(store).use(router).use(request).use(ElementPlus, {locale: zhCn}).use(jsCookie).mount('#app')
+createApp(App).use(store).use(router).use(request).use(dateFormat).use(ElementPlus, {locale: zhCn}).use(jsCookie).mount('#app')

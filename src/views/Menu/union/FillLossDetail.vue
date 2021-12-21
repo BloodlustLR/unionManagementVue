@@ -2,7 +2,7 @@
 <div class="fillLossDetail">
     <div class="main-board">
         <div class="display-type">
-            <el-radio-group v-model="displayType" size="small">
+            <el-radio-group v-model="displayType" size="small" @change="changeLabel">
                 <el-radio-button label="detail">详情</el-radio-button>
                 <el-radio-button label="count">统计</el-radio-button>
             </el-radio-group>
@@ -31,12 +31,12 @@
                     <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币,军团补损总额: {{armyTotal/100000000}}亿星币</div>
                     <div class="army-detail">
                         <div class="detail-item" v-for="(item,index) in armyLossList" :key="'armyLoss_'+index">
-                            <el-card class="box-card" style="height:220px;width:90%;margin:10px auto;text-align:left">
+                            <el-card :class="{'box-card':true,'box-card-modify':item.isModify}" style="height:220px;width:90%;margin:10px auto;text-align:left">
                                 <div class="report-item">编号: {{item.id}}</div>
                                 <div class="report-item">舰船名: {{item.shipName}}</div>
                                 <div class="report-item">时间: {{item.lossTime}}</div>
-                                <div class="report-item">地区: {{item.area}}</div>
-                                <div class="report-item">星域: {{item.constellation}}</div>
+                                <div class="report-item">星域: {{item.area}}</div>
+                                <div class="report-item">星座: {{item.constellation}}</div>
                                 <div class="report-item">星系: {{item.galaxy}}</div>
                                 <div class="report-item">金额: {{item.num}}星币</div>
                                 <div class="report-item">最后一击: {{item.kmShip}}</div>
@@ -44,7 +44,7 @@
 
                                 <div class="box-remove" @click="removeLoss(index)">X</div>
                                 <div class="box-info">
-                                    <span style="margin-right:20px">{{totalPrice/100000000}}亿星币</span>
+                                    <span style="margin-right:20px">{{item.price/100000000}}亿星币</span>
                                     <el-button type="primary" size="mini" @click="openImgModal(item.img)">查看截图</el-button>
                                 </div>
                             </el-card>
@@ -52,12 +52,67 @@
                     </div>
                 </div>
             </div>
-            <div class="count" v-show="displayType=='count'">
+            <div class="count" v-if="displayType=='count'">
                 <div id="army_count" class="count-item"></div>
                 <div id="ship_type_count" class="count-item"></div>
             </div>
         </div>
     </div>
+
+    <el-dialog v-model="modifyModal" title="补损详情" width="80%">
+        <div class="modify-box">
+            <div class="modify-item">
+                <span style="margin-right:10px">时间</span>
+                <el-date-picker v-model="lossInfo.reportTime" type="datetime" placeholder="请选择损失时间" disabled></el-date-picker>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">军团简称</span>
+                <el-select v-model="lossInfo.armyShortName" placeholder="请选择军团简称" style="width:220px" filterable>
+                    <el-option v-for="item in armyList" :key="item.shortName" :label="item.shortName" :value="item.shortName"></el-option>
+                </el-select>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">角色名</span>
+                <el-input v-model="lossInfo.gameId" placeholder="请输入角色名" style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">舰船名</span>
+                <el-select v-model="lossInfo.shipName" placeholder="请选择舰船名" style="width:220px" filterable>
+                    <el-option v-for="item in shipList" :key="item.name" :label="item.name" :value="item.name"></el-option>
+                </el-select>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">星域</span>
+                <el-input v-model="lossInfo.area" placeholder="请输入星域" style="width:220px" disabled/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">星座</span>
+                <el-input v-model="lossInfo.constellation" placeholder="请输入星座" style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">星系</span>
+                <el-input v-model="lossInfo.galaxy" placeholder="请输入星系" style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">金额</span>
+                <el-input-number v-model="lossInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">最后一击</span>
+                <el-input v-model="lossInfo.kmShip" placeholder="请输入最后一击舰船名" style="width:220px"/>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">最高伤害</span>
+                <el-input v-model="lossInfo.highATKShip" placeholder="请输入最高伤害舰船名" style="width:220px"/>
+            </div>
+        </div>
+        <template #footer>
+        <span class="dialog-footer">
+            <el-button type="primary" @click="modifyData">确认</el-button>
+            <el-button @click="modifyModal = false">关闭</el-button>
+        </span>
+        </template>
+    </el-dialog>
 
     <el-dialog v-model="imgModal" title="截图" width="920px">
         <img :src="imgSrc" style="width:888px;height:500px;"/>
@@ -125,17 +180,30 @@ export default {
     },
     mounted(){
         this.paymentInfo.id = this.$route.query.pid;
-        window.armyLossDiagram = echarts.init(document.getElementById('army_count'));
-        window.shipTypeLossDiagram = echarts.init(document.getElementById('ship_type_count'));
-        this.refreshAll();
+        this.refreshAllDetail();
     },
     methods:{
 
-        refreshAll(){
+        changeLabel(value){
+            if(value == "detail"){
+                this.$nextTick(()=>{
+                    this.refreshAllDetail();
+                })
+            }else if(value == "count"){
+                this.$nextTick(()=>{
+                    this.refreshAllDiagram();
+                })
+            }
+        },
+
+        refreshAllDetail(){
             this.getPaymentInfo();
             this.getPymentShipList();
             this.getPaymentTotal();
             this.getPaymentUnionArmy();
+        },
+
+        refreshAllDiagram(){
             this.getPaymentAllArmyLoss();
             this.getPaymentAllTypeLoss();
         },
@@ -187,16 +255,22 @@ export default {
                 pid:this.paymentInfo.id
             }).then(res=>{
                 console.log("loss",res.obj);
-
+                if(window.armyLossDiagram){
+                    window.armyLossDiagram.dispose(); // 销毁实例
+                }
+                window.armyLossDiagram = echarts.init(document.getElementById('army_count'));// 再次创建实例
+                debugger
                 let category = [];
                 let data = [];
+                let sortData = [];
                 for(let armyName in res.obj){
                     category.push(armyName);
                     data.push(res.obj[armyName]);
+                    sortData.push(res.obj[armyName]);
                 }
-                let sortData = data.sort();
+                sortData.sort();
                 let max = parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000;
-
+                debugger
                 let option = {
                     backgroundColor:'#323a5e',
                         tooltip: {
@@ -312,14 +386,20 @@ export default {
                 pid:this.paymentInfo.id
             }).then(res=>{
                 console.log("loss",res.obj);
+                if(window.shipTypeLossDiagram){
+                    window.shipTypeLossDiagram.dispose(); // 销毁实例
+                }
+                window.shipTypeLossDiagram = echarts.init(document.getElementById('ship_type_count'));
 
                 let category = [];
                 let data = [];
+                let sortData = [];
                 for(let shipType in res.obj){
                     category.push(shipType);
                     data.push(res.obj[shipType]);
+                    sortData.push(res.obj[shipType]);
                 }
-                let sortData = data.sort();
+                sortData.sort();
                 let max = parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000;
 
                 let option = {
@@ -600,6 +680,14 @@ export default {
                                     right:20px;
                                     bottom:20px;
                                     color:tomato;
+                                }
+                            }
+
+                            .box-card-modify{
+                                background-color: coral;
+
+                                .box-info{
+                                    color:#303133;
                                 }
                             }
                         }
