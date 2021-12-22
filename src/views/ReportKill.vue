@@ -1,5 +1,5 @@
 <template>
-<div class="reportPayment">
+<div class="reportKill">
     <div class="header">
         <div class="title">
             {{killReportInfo.name}}
@@ -19,16 +19,16 @@
 
     <div class="list">
         <div v-for="(detectResult,key,index) in detectResultList" :key="index" class="list-item">
-            <el-card class="box-card" style="height:220px;width:90%;margin:10px auto;text-align:left">
+            <el-card class="box-card" style="height:240px;width:90%;margin:10px auto;text-align:left">
                 <div class="report-item">编号: {{detectResult.reportId}}</div>
                 <div class="report-item">时间: {{detectResult.reportTime}}</div>
-                <div class="report-item">军团简称: {{detectResult.kmArmyShortName}}</div>
-                <div class="report-item">角色名: {{detectResult.kmGameId}}</div>
-                <div class="report-item">舰船名: {{detectResult.shipName}}</div>
+                <div class="report-item">军团缩写: {{detectResult.kmArmyShortName}}</div>
+                <div class="report-item">最后一击: {{detectResult.kmGameId}}</div>
+                <div class="report-item">击杀船型: {{detectResult.shipName}}</div>
                 <div class="report-item">星域: {{detectResult.area}}</div>
                 <div class="report-item">星座: {{detectResult.constellation}}</div>
                 <div class="report-item">星系: {{detectResult.galaxy}}</div>
-                <div class="report-item">金额: {{detectResult.money}}</div>
+                <div class="report-item">金额: {{thousandBitSeparator(detectResult.money)}}</div>
 
                 <div class="box-remove" @click="removeResult(detectResult.reportId)">X</div>
                 <div class="box-info">
@@ -40,8 +40,15 @@
                 </div>
             </el-card>
         </div>
+
+        <div v-for="(item,key,index) in loadingList" :key="index" class="list-item">
+            <el-card class="box-card" style="height:220px;width:90%;margin:10px auto;text-align:left">
+                <el-progress type="circle" :percentage="item" style="vertical-align:middle;margin-right:10%"/>
+                <span>文件【{{key}}】解析中</span>
+            </el-card>
+        </div>
         <div style="margin-top:10px;">
-            <el-upload v-if="!hasOutOfDate" accept="image/jpeg,image/png" :action="uploadUrl" :on-success="handleSuccess" :before-upload="beforeUpload" :show-file-list="false" drag multiple>
+            <el-upload v-if="!hasOutOfDate" accept="image/jpeg,image/png" :action="uploadUrl" :on-success="handleSuccess" :before-upload="beforeUpload" :show-file-list="false" :on-progress="uploadProgress" drag multiple>
                 <svg class="icon" width="200" height="140" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" data-v-365b8594=""><path fill="#1E90FF" d="M544 864V672h128L512 480 352 672h128v192H320v-1.6c-5.376.32-10.496 1.6-16 1.6A240 240 0 0164 624c0-123.136 93.12-223.488 212.608-237.248A239.808 239.808 0 01512 192a239.872 239.872 0 01235.456 194.752c119.488 13.76 212.48 114.112 212.48 237.248a240 240 0 01-240 240c-5.376 0-10.56-1.28-16-1.6v1.6H544z"></path></svg>
                 <div class="el-upload__text">
                     拖拽文件到这里或者<em>点击上传</em>
@@ -145,6 +152,7 @@ export default {
         return{
             armyList:[],
             shipList:[],
+            
             killReportInfo:{
                 id:null,
                 name:null,
@@ -158,6 +166,7 @@ export default {
             hasOutOfDate:true,
             uploadUrl:'/api/ocr/detectPic',
             detectResultList:reactive({}),
+            loadingList:reactive({}),
 
             detailModal:false,
             modifyModal:false,
@@ -260,12 +269,18 @@ export default {
             if(!isJPG&&!isPNG){
                 ElMessage.error('只可以上传JPG或PNG图像');
             }
-
+            this.loadingList[file.name] = 0;
             return isJPG || isPNG;
+        },
+
+        uploadProgress(event, file, fileList){
+            this.loadingList[file.name] = Number((event.loaded/event.total).toFixed(1));
+            console.log(event, file, fileList);
         },
 
         handleSuccess(response, file, fileList){
             console.log(response);
+            delete this.loadingList[file.name];
 
             if(isEmpty(response.obj.reportId)){
                 ElMessage.error('识别结果缺失报告编号，请换一张图试试');
@@ -299,7 +314,7 @@ export default {
 
             if(!isEmpty(this.killReportInfo.killEndTime)){
                 if(!isEmpty(response.obj.reportTime)){
-                    let killEndTime = new Date(this.paymentInfo.killEndTime).getTime();
+                    let killEndTime = new Date(this.killReportInfo.killEndTime).getTime();
 
                     let reportTime = new Date(response.obj.reportTime).getTime();
 
@@ -380,6 +395,42 @@ export default {
                 }
                 
             });
+        },
+
+        thousandBitSeparator(str){ 
+            str = String(str);
+            if (str.indexOf('.')>=0) {
+                var postfix = str.substring(str.indexOf('.'));
+                str = str.substring(0,str.indexOf('.'));
+            }else{
+                var postfix = '';
+            };
+            // console.log(postfix);
+            // .99
+            // console.log(str);
+            // 9999999999999
+            var iNum = str.length % 3; 
+            var prev = ''; 
+            var iNow = 0; 
+            var temp = ''; 
+            var arr = []; 
+            if (iNum != 0){ 
+                prev = str.substring(0, iNum); 
+                arr.push(prev); 
+            } 
+            str = str.substring(iNum); 
+            for (var i = 0; i < str.length; i++){ 
+                iNow++; 
+                temp += str[i]; 
+                if (iNow == 3 && temp){ 
+                arr.push(temp); 
+                temp = ''; 
+                iNow = 0; 
+                } 
+            } 
+            // console.log(arr);
+            // ["9", "999", "999", "999", "999"]
+            return arr.join(',') + postfix; 
         }
     }
 
@@ -403,27 +454,17 @@ function isEmpty(value) {
 }
 </script>
 <style lang="less">
-.reportPayment{
+.reportKill{
     height:100%;
     width:100%;
     text-align: center;
 
-    .payment-box{
-        text-align: left;
-
-        .payment-item{
-            height:20px;
-            line-height:20px;
-        }
-    }
 
     .killReport-box{
         margin-top:50px;
         text-align: left;
 
-
         .killReport-item{
-            height:20px;
             line-height:20px;
         }
     }
@@ -501,6 +542,7 @@ function isEmpty(value) {
                     right:20px;
                     bottom:20px;
                     color:tomato;
+                    text-align: right;
 
                 }
 

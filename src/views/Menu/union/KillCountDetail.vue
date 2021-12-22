@@ -32,12 +32,12 @@
                         <div class="detail-item" v-for="(item,index) in armyKillList" :key="'armyLoss_'+index">
                             <el-card :class="{'box-card':true,'box-card-modify':item.isModify}" style="height:220px;width:90%;margin:10px auto;text-align:left">
                                 <div class="report-item">编号: {{item.id}}</div>
-                                <div class="report-item">舰船名: {{item.shipName}}</div>
+                                <div class="report-item">击杀船型: {{item.shipName}}</div>
                                 <div class="report-item">时间: {{item.killTime}}</div>
                                 <div class="report-item">星域: {{item.area}}</div>
                                 <div class="report-item">星座: {{item.constellation}}</div>
                                 <div class="report-item">星系: {{item.galaxy}}</div>
-                                <div class="report-item">金额: {{item.num}}星币</div>
+                                <div class="report-item">金额: {{thousandBitSeparator(item.num)}}星币</div>
 
                                 <div class="box-remove" @click="removeKill(index)">X</div>
                                 <div class="box-info">
@@ -158,7 +158,10 @@ export default {
 
                 sortData.sort(compare("num"));
                 console.log(sortData);
-                let max = parseInt(sortData[sortData.length-1].num/100000000)*100000000+1000000000;
+                let max = 1000000000;
+                if(sortData.length>0){
+                    max += parseInt(sortData[sortData.length-1].num/100000000)*100000000;
+                }
                 let category = [];
                 let data = [];
                 for(let item of sortData){
@@ -293,7 +296,10 @@ export default {
                     sortData.push(res.obj[area]);
                 }
                 sortData.sort();
-                let max = parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000;
+                let max = 1000000000;
+                if(sortData.length>0){
+                    max += parseInt(sortData[sortData.length-1]/100000000)*100000000;
+                }
 
                 let option = {
                     backgroundColor:'#323a5e',
@@ -484,6 +490,42 @@ export default {
         openImgModal(imgSrc){
             this.imgSrc = imgSrc;
             this.imgModal = true;
+        },
+
+        thousandBitSeparator(str){ 
+            str = String(str);
+            if (str.indexOf('.')>=0) {
+                var postfix = str.substring(str.indexOf('.'));
+                str = str.substring(0,str.indexOf('.'));
+            }else{
+                var postfix = '';
+            };
+            // console.log(postfix);
+            // .99
+            // console.log(str);
+            // 9999999999999
+            var iNum = str.length % 3; 
+            var prev = ''; 
+            var iNow = 0; 
+            var temp = ''; 
+            var arr = []; 
+            if (iNum != 0){ 
+                prev = str.substring(0, iNum); 
+                arr.push(prev); 
+            } 
+            str = str.substring(iNum); 
+            for (var i = 0; i < str.length; i++){ 
+                iNow++; 
+                temp += str[i]; 
+                if (iNow == 3 && temp){ 
+                arr.push(temp); 
+                temp = ''; 
+                iNow = 0; 
+                } 
+            } 
+            // console.log(arr);
+            // ["9", "999", "999", "999", "999"]
+            return arr.join(',') + postfix; 
         }
 
 
@@ -544,7 +586,6 @@ function compare(propertyName) {
                         
 
                         .killReport-item{
-                            height:20px;
                             line-height:20px;
                         }
                     }

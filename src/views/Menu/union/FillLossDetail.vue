@@ -31,14 +31,14 @@
                     <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币,军团补损总额: {{armyTotal/100000000}}亿星币</div>
                     <div class="army-detail">
                         <div class="detail-item" v-for="(item,index) in armyLossList" :key="'armyLoss_'+index">
-                            <el-card :class="{'box-card':true,'box-card-modify':item.isModify}" style="height:220px;width:90%;margin:10px auto;text-align:left">
+                            <el-card :class="{'box-card':true,'box-card-modify':item.isModify}" style="height:240px;width:90%;margin:10px auto;text-align:left">
                                 <div class="report-item">编号: {{item.id}}</div>
                                 <div class="report-item">舰船名: {{item.shipName}}</div>
                                 <div class="report-item">时间: {{item.lossTime}}</div>
                                 <div class="report-item">星域: {{item.area}}</div>
                                 <div class="report-item">星座: {{item.constellation}}</div>
                                 <div class="report-item">星系: {{item.galaxy}}</div>
-                                <div class="report-item">金额: {{item.num}}星币</div>
+                                <div class="report-item">金额: {{thousandBitSeparator(item.num)}}星币</div>
                                 <div class="report-item">最后一击: {{item.kmShip}}</div>
                                 <div class="report-item">最高伤害: {{item.highAtkShip}}</div>
 
@@ -469,14 +469,14 @@ export default {
             }).then(res=>{
                 this.armyLossList = res.obj;
 
-                for(let item of this.armyLossList){
-                    for(let standardShip of this.paymentShipList){
-                        if(item.shipName == standardShip.name){
-                            item.price = standardShip.price;
-                            break;
-                        }
-                    }
-                }
+                // for(let item of this.armyLossList){
+                //     for(let standardShip of this.paymentShipList){
+                //         if(item.shipName == standardShip.name){
+                //             item.price = standardShip.price;
+                //             break;
+                //         }
+                //     }
+                // }
                 console.log("this.armyLossList",this.armyLossList);
             })
         },
@@ -514,6 +514,42 @@ export default {
         openImgModal(imgSrc){
             this.imgSrc = imgSrc;
             this.imgModal = true;
+        },
+
+        thousandBitSeparator(str){ 
+            str = String(str);
+            if (str.indexOf('.')>=0) {
+                var postfix = str.substring(str.indexOf('.'));
+                str = str.substring(0,str.indexOf('.'));
+            }else{
+                var postfix = '';
+            };
+            // console.log(postfix);
+            // .99
+            // console.log(str);
+            // 9999999999999
+            var iNum = str.length % 3; 
+            var prev = ''; 
+            var iNow = 0; 
+            var temp = ''; 
+            var arr = []; 
+            if (iNum != 0){ 
+                prev = str.substring(0, iNum); 
+                arr.push(prev); 
+            } 
+            str = str.substring(iNum); 
+            for (var i = 0; i < str.length; i++){ 
+                iNow++; 
+                temp += str[i]; 
+                if (iNow == 3 && temp){ 
+                arr.push(temp); 
+                temp = ''; 
+                iNow = 0; 
+                } 
+            } 
+            // console.log(arr);
+            // ["9", "999", "999", "999", "999"]
+            return arr.join(',') + postfix; 
         }
     }
 }
@@ -557,7 +593,6 @@ export default {
                         
 
                         .payment-item{
-                            height:20px;
                             line-height:20px;
                         }
                     }
@@ -625,6 +660,7 @@ export default {
                                     right:20px;
                                     bottom:20px;
                                     color:tomato;
+                                    text-align: right;
                                 }
                             }
 

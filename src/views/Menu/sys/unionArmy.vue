@@ -381,6 +381,7 @@ function isEmpty(value) {
         width:90%;
         margin:0 auto;
         background-color: white;
+        overflow-y: auto;
 
         .tree-title{
             vertical-align:middle;
