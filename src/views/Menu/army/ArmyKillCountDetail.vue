@@ -1,15 +1,8 @@
 <template>
-<div class="killCountDetail">
-<div class="main-board">
-        <div class="display-type">
-            <el-radio-group v-model="displayType" size="small" @change="changeLabel">
-                <el-radio-button label="detail">详情</el-radio-button>
-                <el-radio-button label="count">统计</el-radio-button>
-            </el-radio-group>
-        </div>
-
+<div class="armyKillCountDetail">
+    <div class="main-board">
         <div class="content">
-            <div class="detail" v-show="displayType=='detail'">
+            <div class="detail">
                 <div class="detail-left">
                     <div class="killReport-box">
                         <div class="killReport-item" style="font-weight:bolder">补损编号- {{killReportInfo.id}}</div>
@@ -20,10 +13,10 @@
                         <div class="killReport-item" style="font-weight:bolder">允许星座- {{killReportInfo.limitConstellation}}</div>
                         <div class="killReport-item" style="font-weight:bolder">允许星系- {{killReportInfo.limitGalaxy}}</div>
                         <div class="killReport-item" style="font-weight:bolder">截止时间- {{killReportInfo.endTime}}</div>
-                        <div class="killReport-item" style="font-weight:bolder;margin-top:20px">击杀总额:  {{Math.round(totalKill/100000000)}}亿星币</div>
+                        <div class="killReport-item" style="font-weight:bolder;margin-top:20px">击杀总额:  {{Math.round(armyTotal/100000000)}}亿星币</div>
                     </div>
                     <div class="army-box">
-                        <el-tree :data="unionArmyList" :props="defaultProps"  @node-click="handleNodeClick"/>
+                        <div id="army_rank" class="count-item"></div>
                     </div>
                 </div>
                 <div class="detail-right">
@@ -41,16 +34,13 @@
 
                                 <div class="box-remove" @click="removeKill(index)">X</div>
                                 <div class="box-info">
+                                    <!-- <el-button type="primary" size="mini" @click="openModifyModal(detectResult)">修改</el-button> -->
                                     <el-button type="primary" size="mini" @click="openImgModal(item.img)">查看截图</el-button>
                                 </div>
                             </el-card>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="count" v-if="displayType=='count'">
-                <div id="army_rank" class="count-item"></div>
-                <div id="area_count" class="count-item"></div>
             </div>
         </div>
     </div>
@@ -63,6 +53,7 @@
         </span>
         </template>
     </el-dialog>
+
 </div>
 </template>
 <script>
@@ -72,7 +63,8 @@ import { ElMessageBox, ElMessage } from 'element-plus';
 export default {
     data(){
         return{
-            displayType:'detail',
+            armyId:null,
+            armyShortName:null,
             killReportInfo:{
                 id:null,
                 name:null,
@@ -85,10 +77,17 @@ export default {
             },
             totalKill:0,
 
-            unionArmyList:[],
-            defaultProps: {
-                children: 'armyList',
-                label: 'name',
+            modifyModal:false,
+            killInfo:{
+                reportId:null,
+                reportTime:null,
+                armyShortName:'',
+                gameId:'',
+                shipName:'',
+                area:'',
+                constellation:'',
+                galaxy:'',
+                money:''
             },
 
             armyKillList:[],
@@ -109,32 +108,123 @@ export default {
     },
     created(){
         this.killReportInfo.id = this.$route.query.pid;
+        this.armyShortName = this.$store.state.loginInfo.shortArmy;
     },
     mounted(){
-        this.refreshAllDetail();
+        this.refreshAllDetail(this.armyShortName);
     },
     methods:{
-        changeLabel(value){
-            if(value == "detail"){
-                this.$nextTick(()=>{
-                    this.refreshAllDetail();
-                })
-            }else if(value == "count"){
-                this.$nextTick(()=>{
-                    this.refreshAllDiagram();
-                })
-            }
-        },
-
-        refreshAllDetail(){
+        refreshAllDetail(shortArmy){
+            this.getArmyInfo(shortArmy);
             this.getKillReportInfo();
-            this.getKillReportTotal();
-            this.getKillReportUnionArmy();
+            this.getAllArmyRank();
         },
 
-        refreshAllDiagram(){
-            this.getAllArmyRank();
-            this.getAreaKill();
+        getAllShip(){
+            this.$request.get("/ship/getAllShip").then(res =>{
+                console.log(res.obj);
+                this.shipList = res.obj;
+            })
+        },
+
+        getArmyInfo(shortArmy){
+            this.$request.get("/army/getAllArmy").then(res =>{
+                this.armyList = res.obj;
+                for(let item of this.armyList){
+                    console.log(item);
+                    if(item.shortName==shortArmy){
+                        this.armyId = item.id;
+                        break;
+                    }
+                }
+                this.getKillReportArmyKill();
+            })
+        },
+
+        getKillReportArmyKill(){
+            this.$request.post("/kill/getKillReportArmyKill",{
+                killReportId:this.killReportInfo.id,
+                armyId:this.armyId
+            }).then(res=>{
+                this.armyKillList = res.obj;
+                console.log("this.armyKillList",this.armyKillList);
+            })
+        },
+
+        getKillReportInfo(){
+            this.$request.get("/killReport/getKillReportInfo",{
+                pid:this.killReportInfo.id
+            }).then(res=>{
+                this.killReportInfo.name = res.obj.name;
+                this.killReportInfo.endTime = res.obj.endTime;
+                this.killReportInfo.killStartTime = res.obj.killStartTime;
+                this.killReportInfo.killEndTime = res.obj.killEndTime;
+                this.killReportInfo.limitArea = JSON.parse(res.obj.limitArea);
+                this.killReportInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
+                this.killReportInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+            })
+        },
+
+        removeKill(index){
+            ElMessageBox.confirm(
+                '是否确认删除此击杀?',
+                '删除击杀',
+                {
+                    confirmButtonText: '确认',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                }
+            )
+            .then(() => {
+                this.$request.post("/kill/removeKill",{
+                    id:this.armyKillList[index].id
+                }).then(res => {
+                    if(res.obj=="success"){
+                        ElMessage({
+                            message: '删除成功',
+                            type: 'success',
+                        })
+                        this.armyKillList.splice(index,1);
+                        this.refreshAllDetail();
+                    }else{
+                        ElMessage.error('删除失败');
+                    }
+                })
+            }).catch(() => {
+
+            })
+        },
+
+        // openModifyModal(value){
+        //     console.log(value);
+        //     this.killInfo.reportId = value.reportId;
+        //     this.killInfo.reportTime = value.reportTime==null?null:new Date(value.reportTime);
+        //     this.killInfo.armyShortName = value.kmArmyShortName;
+        //     this.killInfo.gameId = value.kmGameId;
+        //     this.killInfo.shipName = value.shipName;
+        //     this.killInfo.area = value.area;
+        //     this.killInfo.constellation = value.constellation;
+        //     this.killInfo.galaxy = value.galaxy;
+        //     this.killInfo.money = Number(value.money);
+        //     this.modifyModal = true;
+        // },
+
+        // modifyData(){
+        //     this.detectResultList[this.killInfo.reportId].reportTime = this.killInfo.reportTime.format("yyyy-MM-dd hh:mm:ss");
+        //     this.detectResultList[this.killInfo.reportId].kmArmyShortName = this.killInfo.armyShortName;
+        //     this.detectResultList[this.killInfo.reportId].kmGameId = this.killInfo.gameId;
+        //     this.detectResultList[this.killInfo.reportId].shipName = this.killInfo.shipName;
+        //     this.detectResultList[this.killInfo.reportId].area = this.killInfo.area;
+        //     this.detectResultList[this.killInfo.reportId].constellation = this.killInfo.constellation;
+        //     this.detectResultList[this.killInfo.reportId].galaxy = this.killInfo.galaxy;
+        //     this.detectResultList[this.killInfo.reportId].money = this.killInfo.money;
+        //     this.detectResultList[this.killInfo.reportId].isModify = true;
+        //     this.modifyModal = false;
+        // },
+
+        openImgModal(imgSrc){
+            this.imgSrc = imgSrc;
+            this.imgModal = true;
         },
 
         getAllArmyRank(){
@@ -276,221 +366,7 @@ export default {
                 armyRankDiagram.setOption(option);
             })
         },
-
-        getAreaKill(){
-            this.$request.get("/kill/getAllAreaKill",{
-                pid:this.killReportInfo.id
-            }).then(res=>{
-                if(window.areaKillDiagram){
-                    window.areaKillDiagram.dispose(); // 销毁实例
-                }
-                window.areaKillDiagram = echarts.init(document.getElementById('area_count'));
-
-                let category = [];
-                let data = [];
-                let sortData = [];
-                for(let area in res.obj){
-                    category.push(area);
-                    data.push(res.obj[area]);
-                    sortData.push(res.obj[area]);
-                }
-                sortData.sort();
-                let max = 1000000000;
-                if(sortData.length>0){
-                    max += parseInt(sortData[0]/100000000)*100000000;
-                }
-
-                let option = {
-                    backgroundColor:'#323a5e',
-                        tooltip: {
-                            trigger: 'axis',
-                            axisPointer: { // 坐标轴指示器，坐标轴触发有效
-                                type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
-                        }
-                        },
-                        grid: {
-                            left: '2%',
-                            right: '4%',
-                            bottom: '14%',
-                            top:'16%',
-                            containLabel: true
-                        },
-                        legend: {
-                        data: ['击杀KM'],
-                        right: 10,
-                        top:12,
-                        textStyle: {
-                            color: "#fff"
-                        },
-                        itemWidth: 12,
-                        itemHeight: 10,
-                        // itemGap: 35
-                    },
-                    xAxis: {
-                        type: 'category',
-                        data: category,
-                        axisLine: {
-                            lineStyle: {
-                            color: 'white'
-
-                            }
-                        },
-                        axisLabel: {
-                            // interval: 0,
-                            // rotate: 40,
-                            textStyle: {
-                            fontFamily: 'Microsoft YaHei'
-                            }
-                        },
-                    },
-                    yAxis: {
-                        type: 'value',
-                        max: max.toString(),
-                        axisLine: {
-                            show: false,
-                            lineStyle: {
-                            color: 'white'
-                            }
-                        },
-                        splitLine: {
-                            show: true,
-                            lineStyle: {
-                            color: 'rgba(255,255,255,0.3)'
-                            }
-                        },
-                        axisLabel: {}
-                    },
-                    "dataZoom": [{
-                        "show": true,
-                        "height": 12,
-                        "xAxisIndex": [
-                            0
-                        ],
-                        bottom:'8%',
-                        "start": 10,
-                        "end": 90,
-                        handleIcon: 'path://M306.1,413c0,2.2-1.8,4-4,4h-59.8c-2.2,0-4-1.8-4-4V200.8c0-2.2,1.8-4,4-4h59.8c2.2,0,4,1.8,4,4V413z',
-                        handleSize: '110%',
-                        handleStyle:{
-                            color:"#d3dee5",
-
-                        },
-                        textStyle:{
-                            color:"#fff"
-                        },
-                        borderColor:"#90979c"
-                    }, {
-                        "type": "inside",
-                        "show": true,
-                        "height": 15,
-                        "start": 1,
-                        "end": 35
-                    }],
-                    series: [{
-                        name: '击杀KM',
-                        type: 'bar',
-                        barWidth: '15%',
-                        itemStyle: {
-                            normal: {
-                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                                    offset: 0,
-                                    color: '#8bd46e'
-                                }, {
-                                    offset: 1,
-                                    color: '#09bcb7'
-                                }]),
-                                barBorderRadius: 11,
-                            }
-                        },
-                        data: data
-                    }]
-                };
-                // 绘制图表
-                areaKillDiagram.setOption(option);
-            })
-        },
-
-        getKillReportInfo(){
-            this.$request.get("/killReport/getKillReportInfo",{
-                pid:this.killReportInfo.id
-            }).then(res=>{
-                this.killReportInfo.name = res.obj.name;
-                this.killReportInfo.endTime = res.obj.endTime;
-                this.killReportInfo.killStartTime = res.obj.killStartTime;
-                this.killReportInfo.killEndTime = res.obj.killEndTime;
-                this.killReportInfo.limitArea = JSON.parse(res.obj.limitArea);
-                this.killReportInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
-                this.killReportInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
-            })
-        },
-
-        getKillReportTotal(){
-            this.$request.get("/killReport/getKillReportTotal",{
-                pid:this.killReportInfo.id
-            }).then(res=>{
-                this.totalKill = res.obj.killTotal;
-            })
-        },
-
-        getKillReportUnionArmy(){
-            this.$request.get("/killReport/getKillReportUnionArmy",{
-                pid:this.killReportInfo.id
-            }).then(res=>{
-                this.unionArmyList = res.obj;
-                console.log(this.unionArmyList);
-            })
-        },
-
-        handleNodeClick(data,node){
-            if(node.level!=2)return;
-            this.getKillReportArmyKill(data.id);
-        },
-
-        getKillReportArmyKill(armyId){
-            this.$request.post("/kill/getKillReportArmyKill",{
-                killReportId:this.killReportInfo.id,
-                armyId:armyId
-            }).then(res=>{
-                this.armyKillList = res.obj;
-                console.log("this.armyKillList",this.armyKillList);
-            })
-        },
-
-        removeKill(index){
-            ElMessageBox.confirm(
-                '是否确认删除此击杀?',
-                '删除击杀',
-                {
-                    confirmButtonText: '确认',
-                    cancelButtonText: '取消',
-                    type: 'warning',
-                }
-            )
-            .then(() => {
-                this.$request.post("/kill/removeKill",{
-                    id:this.armyKillList[index].id
-                }).then(res => {
-                    if(res.obj=="success"){
-                        ElMessage({
-                            message: '删除成功',
-                            type: 'success',
-                        })
-                        this.armyKillList.splice(index,1);
-                        this.refreshAllDetail();
-                    }else{
-                        ElMessage.error('删除失败');
-                    }
-                })
-            }).catch(() => {
-
-            })
-        },
-
-        openImgModal(imgSrc){
-            this.imgSrc = imgSrc;
-            this.imgModal = true;
-        },
-
+        
         thousandBitSeparator(str){ 
             str = String(str);
             if (str.indexOf('.')>=0) {
@@ -527,7 +403,6 @@ export default {
             return arr.join(',') + postfix; 
         }
 
-
     }
 }
 //定义一个比较器--降序排列
@@ -547,7 +422,7 @@ function compare(propertyName) {
 }
 </script>
 <style lang="less">
-.killCountDetail{
+.armyKillCountDetail{
     height:100%;
     width:100%;
     padding-top:20px;
@@ -558,14 +433,15 @@ function compare(propertyName) {
         margin:0 auto;
         background-color: white;
 
-        .display-type{
-            height:40px;
-            text-align: center;
-            padding-top:10px;
-        }
+        // .display-type{
+        //     height:40px;
+        //     text-align: center;
+        //     padding-top:10px;
+        // }
 
         .content{
-            height:calc(100% - 40px);
+            // height:calc(100% - 40px);
+            height: 100%;
             width: 100%;
 
             .detail{
@@ -595,6 +471,14 @@ function compare(propertyName) {
                         overflow-y: auto;
                         border:1px solid black;
                         border-right:none;
+
+                        .count-item{
+                            height:100%;
+                            width:100%;
+                            background-color: rgb(38,50,56);
+                            vertical-align: middle;
+                            display: inline-block;
+                        }
                     }
 
                 }
@@ -611,6 +495,7 @@ function compare(propertyName) {
                         border-bottom: 1px solid black;
                         text-align: center;
                         font-weight: bolder;
+
                     }
 
                     .army-detail{
@@ -685,6 +570,17 @@ function compare(propertyName) {
                 }
             }
 
+
+
+        }
+    }
+
+    .modify-box{
+        text-align: center;
+
+        .modify-item{
+            height:45px;
+            line-height:45px;
         }
     }
 }

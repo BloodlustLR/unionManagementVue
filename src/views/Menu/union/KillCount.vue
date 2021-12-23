@@ -9,7 +9,7 @@
         <el-table :data="tableData" :row-class-name="rowClass" style="width: 100%">
             <el-table-column prop="id" label="编号" width="100"/>
             <el-table-column prop="createTime" label="发布日期"/>
-            <el-table-column prop="name" label="补损名"/>
+            <el-table-column prop="name" label="击杀统计名"/>
             <el-table-column prop="endTime" label="截止时间"/>
             <el-table-column label="操作" width="300">
                 <template #default="scope">

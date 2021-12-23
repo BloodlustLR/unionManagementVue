@@ -9,7 +9,8 @@
                 <svg class="icon" width="30" height="30" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" data-v-365b8594="" style="margin-top:15px;margin-right:10px"><path fill="white" d="M176 416a112 112 0 100 224 112 112 0 000-224m0 64a48 48 0 110 96 48 48 0 010-96zm336-64a112 112 0 110 224 112 112 0 010-224zm0 64a48 48 0 100 96 48 48 0 000-96zm336-64a112 112 0 110 224 112 112 0 010-224zm0 64a48 48 0 100 96 48 48 0 000-96z"></path></svg>
                 <template #dropdown>
                 <el-dropdown-menu>
-                    <el-dropdown-item @click="detailModal=true">补损详情</el-dropdown-item>
+                    <el-dropdown-item @click="detailModal=true">击杀统计详情</el-dropdown-item>
+                    <el-dropdown-item @click="applyArmyModal=true">批量修改军团</el-dropdown-item>
                     <el-dropdown-item @click="submit">提交</el-dropdown-item>
                 </el-dropdown-menu>
                 </template>
@@ -18,9 +19,8 @@
     </div>
 
     <div class="list">
-        <div v-for="(detectResult,key,index) in detectResultList" :key="index" class="list-item">
+        <div v-for="(detectResult,index) in detectResultList" :key="index" class="list-item">
             <el-card class="box-card" style="height:240px;width:90%;margin:10px auto;text-align:left">
-                <div class="report-item">编号: {{detectResult.reportId}}</div>
                 <div class="report-item">时间: {{detectResult.reportTime}}</div>
                 <div class="report-item">军团缩写: {{detectResult.kmArmyShortName}}</div>
                 <div class="report-item">最后一击: {{detectResult.kmGameId}}</div>
@@ -30,11 +30,11 @@
                 <div class="report-item">星系: {{detectResult.galaxy}}</div>
                 <div class="report-item">金额: {{thousandBitSeparator(detectResult.money)}}</div>
 
-                <div class="box-remove" @click="removeResult(detectResult.reportId)">X</div>
+                <div class="box-remove" @click="removeResult(index)">X</div>
                 <div class="box-info">
                     <div v-if="detectResult.info">{{detectResult.info}}</div>
                     <div style="margin-top:10px">
-                        <el-button type="warning" size="mini" @click="openModifyModal(detectResult)">修改</el-button>
+                        <el-button type="warning" size="mini" @click="openModifyModal(detectResult,index)">修改</el-button>
                         <el-button type="primary" size="mini" @click="openImgModal(detectResult.img)">查看截图</el-button>
                     </div>
                 </div>
@@ -120,7 +120,7 @@
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">金额</span>
-                <el-input-number v-model="killInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px"/>
+                <el-input-number v-model="killInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px" :disabled="killInfo.money!=''&&killInfo.money!=null"/>
             </div>
         </div>
         <template #footer>
@@ -134,8 +134,20 @@
     <el-dialog v-model="imgModal" title="截图" width="80%">
         <img :src="imgSrc" style="width:100%;height:100%;"/>
         <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="imgModal = false">关闭</el-button>
+            </span>
+        </template>
+    </el-dialog>
+
+    <el-dialog v-model="applyArmyModal" title="批量修改军团" width="80%">
+        <el-select v-model="applyArmyShortName" placeholder="请选择军团简称" style="width:220px" filterable>
+            <el-option v-for="item in armyList" :key="item.shortName" :label="item.shortName" :value="item.shortName"></el-option>
+        </el-select>
+        <template #footer>
         <span class="dialog-footer">
-            <el-button @click="imgModal = false">关闭</el-button>
+            <el-button @click="applyArmy">修改</el-button>
+            <el-button @click="applyArmyModal = false">关闭</el-button>
         </span>
         </template>
     </el-dialog>
@@ -165,12 +177,13 @@ export default {
             },
             hasOutOfDate:true,
             uploadUrl:'/api/ocr/detectPic',
-            detectResultList:reactive({}),
+            detectResultList:[],
             loadingList:reactive({}),
 
             detailModal:false,
             modifyModal:false,
             killInfo:{
+                index:null,
                 reportId:null,
                 reportTime:null,
                 armyShortName:'',
@@ -182,7 +195,10 @@ export default {
                 money:''
             },
             imgSrc:'',
-            imgModal:false
+            imgModal:false,
+            
+            applyArmyModal:false,
+            applyArmyShortName:null
         }
     },
     created(){
@@ -211,8 +227,9 @@ export default {
         },
 
 
-        openModifyModal(value){
+        openModifyModal(value,index){
             console.log(value);
+            this.killInfo.index = index;
             this.killInfo.reportId = value.reportId;
             this.killInfo.reportTime = value.reportTime==null?null:new Date(value.reportTime);
             this.killInfo.armyShortName = value.kmArmyShortName;
@@ -226,15 +243,15 @@ export default {
         },
 
         modifyData(){
-            this.detectResultList[this.killInfo.reportId].reportTime = this.killInfo.reportTime.format("yyyy-MM-dd hh:mm:ss");
-            this.detectResultList[this.killInfo.reportId].kmArmyShortName = this.killInfo.armyShortName;
-            this.detectResultList[this.killInfo.reportId].kmGameId = this.killInfo.gameId;
-            this.detectResultList[this.killInfo.reportId].shipName = this.killInfo.shipName;
-            this.detectResultList[this.killInfo.reportId].area = this.killInfo.area;
-            this.detectResultList[this.killInfo.reportId].constellation = this.killInfo.constellation;
-            this.detectResultList[this.killInfo.reportId].galaxy = this.killInfo.galaxy;
-            this.detectResultList[this.killInfo.reportId].money = this.killInfo.money;
-            this.detectResultList[this.killInfo.reportId].isModify = true;
+            this.detectResultList[this.killInfo.index].reportTime = this.killInfo.reportTime.format("yyyy-MM-dd hh:mm:ss");
+            this.detectResultList[this.killInfo.index].kmArmyShortName = this.killInfo.armyShortName;
+            this.detectResultList[this.killInfo.index].kmGameId = this.killInfo.gameId;
+            this.detectResultList[this.killInfo.index].shipName = this.killInfo.shipName;
+            this.detectResultList[this.killInfo.index].area = this.killInfo.area;
+            this.detectResultList[this.killInfo.index].constellation = this.killInfo.constellation;
+            this.detectResultList[this.killInfo.index].galaxy = this.killInfo.galaxy;
+            this.detectResultList[this.killInfo.index].money = this.killInfo.money;
+            this.detectResultList[this.killInfo.index].isModify = true;
             this.modifyModal = false;
         },
 
@@ -282,67 +299,101 @@ export default {
             console.log(response);
             delete this.loadingList[file.name];
 
-            if(isEmpty(response.obj.reportId)){
-                ElMessage.error('识别结果缺失报告编号，请换一张图试试');
-                return;
+            if(response.obj.dataType&&response.obj.dataType=="single"){
+                if(!this.verifyDetect(response.obj)){
+                    return ;
+                }
+
+                response.obj.info = undefined;
+                response.obj.isModify = false;
+                response.obj.killReportId = this.killReportInfo.id;
+                this.detectResultList.push(response.obj);
+            }else if(response.obj.dataType&&response.obj.dataType=="multiple"){
+                console.log(response.obj.list);
+                for(let item of response.obj.list){
+                    if(!this.verifyDetect(item)){
+                        continue;
+                    }
+
+                    let detectResult = {
+                        reportTime:item.reportTime,
+                        shipName:item.shipName,
+                        area:item.area,
+                        constellation:item.constellation,
+                        galaxy:item.galaxy,
+                        kmArmyShortName:item.armyShortName,
+                        kmGameId:item.gameId,
+                        money:item.money,
+                        info:undefined,
+                        isModify:false,
+                        killReportId:this.killReportInfo.id,
+                        img:response.obj.img
+                    }
+
+                    this.detectResultList.push(detectResult);
+                }
             }
-            // if(isEmpty(response.obj.gameId)&&isEmpty(response.obj.armyShortName)){
+
+        },
+
+        verifyDetect(value){
+            // if(isEmpty(value.gameId)&&isEmpty(value.armyShortName)){
             //     ElMessage.error('识别结果缺失身份信息，请换一张图试试');
             //     return;
             // }
-            // if(isEmpty(response.obj.shipName)){
+            // if(isEmpty(value.shipName)){
             //     ElMessage.error('识别结果缺失舰船名，请换一张图试试');
             //     return;
             // }
 
             if(!isEmpty(this.killReportInfo.killStartTime)){
-                if(!isEmpty(response.obj.reportTime)){
+                if(!isEmpty(value.reportTime)){
                     let killStartTime = new Date(this.killReportInfo.killStartTime).getTime();
 
-                    let reportTime = new Date(response.obj.reportTime).getTime();
+                    let reportTime = new Date(value.reportTime).getTime();
 
                     if(reportTime<killStartTime){
                         ElMessage.error('时间不合规');
-                        return;
+                        return false;
                     }
 
                 }else{
                     ElMessage.error('识别结果缺失时间，请换一张图试试');
-                    return;
+                    return false;
                 }
             }
 
             if(!isEmpty(this.killReportInfo.killEndTime)){
-                if(!isEmpty(response.obj.reportTime)){
+                if(!isEmpty(value.reportTime)){
                     let killEndTime = new Date(this.killReportInfo.killEndTime).getTime();
 
-                    let reportTime = new Date(response.obj.reportTime).getTime();
+                    let reportTime = new Date(value.reportTime).getTime();
 
                     if(reportTime>killEndTime){
                         ElMessage.error('时间不合规');
-                        return;
+                        return false;
                     }
                 }else{
                     ElMessage.error('识别结果缺失时间，请换一张图试试');
-                    return;
+                    return false;
                 }
             }
 
             if(!isEmpty(this.killReportInfo.limitArea)){
-                if(!isEmpty(response.obj.area)){
-                    if(this.killReportInfo.limitArea.indexOf(response.obj.area)==-1){
+                if(!isEmpty(value.area)){
+                    if(this.killReportInfo.limitArea.indexOf(value.area)==-1){
                         ElMessage.error('星域不合规');
-                        return;
+                        return false;
                     }
                 }else{
                     ElMessage.error('识别结果缺失星域，请换一张图试试');
-                    return;
+                    return false;
                 }
             }
 
             // if(!isEmpty(this.killReportInfo.constellation)){
-            //     if(!isEmpty(response.obj.constellation)){
-            //         if(this.killReportInfo.limitConstellation.indexOf(response.obj.constellation)==-1){
+            //     if(!isEmpty(value.constellation)){
+            //         if(this.killReportInfo.limitConstellation.indexOf(value.constellation)==-1){
             //             ElMessage.error('星域不合规');
             //             return;
             //         }
@@ -354,8 +405,8 @@ export default {
 
 
             // if(!isEmpty(this.killReportInfo.limitGalaxy)){
-            //     if(!isEmpty(response.obj.galaxy)){
-            //         if(this.killReportInfo.limitGalaxy.indexOf(response.obj.galaxy)==-1){
+            //     if(!isEmpty(value.galaxy)){
+            //         if(this.killReportInfo.limitGalaxy.indexOf(value.galaxy)==-1){
             //             ElMessage.error('星系不合规');
             //             return;
             //         }
@@ -364,14 +415,21 @@ export default {
             //         return;
             //     }
             // }
-            response.obj.info = undefined;
-            response.obj.isModify = false;
-            response.obj.killReportId = this.killReportInfo.id;
-            this.detectResultList[response.obj.reportId]=response.obj;
+            return true;
         },
 
-        removeResult(reportId){
-            delete this.detectResultList[reportId];
+        removeResult(index){
+            this.detectResultList.splice(index,1);
+        },
+
+        applyArmy(){
+            for(let item of this.detectResultList){
+                if(item.kmArmyShortName != this.applyArmyShortName){
+                    item.kmArmyShortName = this.applyArmyShortName;
+                    item.isModify = true;
+                }
+            }
+            this.applyArmyModal = false;
         },
 
         submit(){
@@ -385,7 +443,7 @@ export default {
                         message: '上报成功',
                         type: 'success',
                     })
-                    this.detectResultList = {};
+                    this.detectResultList = [];
                 }else{
                     ElMessage({
                         message: '部分上报失败的内容已返回',

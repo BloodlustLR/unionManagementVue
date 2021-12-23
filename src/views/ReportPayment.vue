@@ -10,6 +10,7 @@
                 <template #dropdown>
                 <el-dropdown-menu>
                     <el-dropdown-item @click="detailModal=true">补损详情</el-dropdown-item>
+                    <el-dropdown-item @click="applyArmyModal=true">批量修改军团</el-dropdown-item>
                     <el-dropdown-item @click="submit">提交</el-dropdown-item>
                 </el-dropdown-menu>
                 </template>
@@ -18,9 +19,8 @@
     </div>
 
     <div class="list">
-        <div v-for="(detectResult,key,index) in detectResultList" :key="index" class="list-item">
+        <div v-for="(detectResult,index) in detectResultList" :key="index" class="list-item">
             <el-card class="box-card" style="height:220px;width:90%;margin:10px auto;text-align:left">
-                <div class="report-item">编号: {{detectResult.reportId}}</div>
                 <div class="report-item">时间: {{detectResult.reportTime}}</div>
                 <div class="report-item">军团缩写: {{detectResult.armyShortName}}</div>
                 <div class="report-item">角色名: {{detectResult.gameId}}</div>
@@ -32,11 +32,11 @@
                 <div class="report-item">最后一击: {{detectResult.kmShip}}</div>
                 <div class="report-item">最高伤害: {{detectResult.highATKShip}}</div>
 
-                <div class="box-remove" @click="removeResult(detectResult.reportId)">X</div>
+                <div class="box-remove" @click="removeResult(index)">X</div>
                 <div class="box-info">
                     <div v-if="detectResult.info">{{detectResult.info}}</div>
                     <div style="margin-top:10px">
-                        <el-button type="warning" size="mini" @click="openModifyModal(detectResult)">修改</el-button>
+                        <el-button type="warning" size="mini" @click="openModifyModal(detectResult,index)">修改</el-button>
                         <el-button type="primary" size="mini" @click="openImgModal(detectResult.img)">查看截图</el-button>
                     </div>
                 </div>
@@ -121,7 +121,7 @@
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">金额</span>
-                <el-input-number v-model="lossInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px"/>
+                <el-input-number v-model="lossInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px" :disabled="killInfo.money!=''&&killInfo.money!=null"/>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">最后一击</span>
@@ -145,6 +145,18 @@
         <template #footer>
         <span class="dialog-footer">
             <el-button @click="imgModal = false">关闭</el-button>
+        </span>
+        </template>
+    </el-dialog>
+
+    <el-dialog v-model="applyArmyModal" title="批量修改军团" width="80%">
+        <el-select v-model="applyArmyShortName" placeholder="请选择军团简称" style="width:220px" filterable>
+            <el-option v-for="item in armyList" :key="item.shortName" :label="item.shortName" :value="item.shortName"></el-option>
+        </el-select>
+        <template #footer>
+        <span class="dialog-footer">
+            <el-button @click="applyArmy">修改</el-button>
+            <el-button @click="applyArmyModal = false">关闭</el-button>
         </span>
         </template>
     </el-dialog>
@@ -173,12 +185,13 @@ export default {
             },
             hasOutOfDate:true,
             uploadUrl:'/api/ocr/detectPic',
-            detectResultList:reactive({}),
+            detectResultList:[],
             loadingList:reactive({}),
 
             detailModal:false,
             modifyModal:false,
             lossInfo:{
+                index:null,
                 reportId:null,
                 reportTime:null,
                 armyShortName:'',
@@ -192,7 +205,10 @@ export default {
                 highATKShip:''
             },
             imgSrc:'',
-            imgModal:false
+            imgModal:false,
+
+            applyArmyModal:false,
+            applyArmyShortName:null
         }
     },
     created(){
@@ -221,8 +237,9 @@ export default {
         },
 
 
-        openModifyModal(value){
+        openModifyModal(value,index){
             console.log(value);
+            this.lossInfo.index = index;
             this.lossInfo.reportId = value.reportId;
             this.lossInfo.reportTime = value.reportTime==null?null:new Date(value.reportTime);
             this.lossInfo.armyShortName = value.armyShortName;
@@ -238,17 +255,17 @@ export default {
         },
 
         modifyData(){
-            this.detectResultList[this.lossInfo.reportId].reportTime = this.lossInfo.reportTime.format("yyyy-MM-dd hh:mm:ss");
-            this.detectResultList[this.lossInfo.reportId].armyShortName = this.lossInfo.armyShortName;
-            this.detectResultList[this.lossInfo.reportId].gameId = this.lossInfo.gameId;
-            this.detectResultList[this.lossInfo.reportId].shipName = this.lossInfo.shipName;
-            this.detectResultList[this.lossInfo.reportId].area = this.lossInfo.area;
-            this.detectResultList[this.lossInfo.reportId].constellation = this.lossInfo.constellation;
-            this.detectResultList[this.lossInfo.reportId].galaxy = this.lossInfo.galaxy;
-            this.detectResultList[this.lossInfo.reportId].money = this.lossInfo.money;
-            this.detectResultList[this.lossInfo.reportId].kmShip = this.lossInfo.kmShip;
-            this.detectResultList[this.lossInfo.reportId].highATKShip = this.lossInfo.highATKShip;
-            this.detectResultList[this.lossInfo.reportId].isModify = true;
+            this.detectResultList[this.lossInfo.index].reportTime = this.lossInfo.reportTime.format("yyyy-MM-dd hh:mm:ss");
+            this.detectResultList[this.lossInfo.index].armyShortName = this.lossInfo.armyShortName;
+            this.detectResultList[this.lossInfo.index].gameId = this.lossInfo.gameId;
+            this.detectResultList[this.lossInfo.index].shipName = this.lossInfo.shipName;
+            this.detectResultList[this.lossInfo.index].area = this.lossInfo.area;
+            this.detectResultList[this.lossInfo.index].constellation = this.lossInfo.constellation;
+            this.detectResultList[this.lossInfo.index].galaxy = this.lossInfo.galaxy;
+            this.detectResultList[this.lossInfo.index].money = this.lossInfo.money;
+            this.detectResultList[this.lossInfo.index].kmShip = this.lossInfo.kmShip;
+            this.detectResultList[this.lossInfo.index].highATKShip = this.lossInfo.highATKShip;
+            this.detectResultList[this.lossInfo.index].isModify = true;
             this.modifyModal = false;
         },
 
@@ -295,68 +312,103 @@ export default {
         handleSuccess(response, file, fileList){
             console.log(response);
             delete this.loadingList[file.name];
+            if(response.obj.dataType&&response.obj.dataType=="single"){
+                if(!this.verifyDetect(response.obj)){
+                    return ;
+                }
+                response.obj.info = undefined;
+                response.obj.isModify = false;
+                response.obj.paymentId = this.paymentInfo.id;
+                this.detectResultList.push(response.obj);
+            }else if(response.obj.dataType&&response.obj.dataType=="multiple"){
+                console.log(response.obj.list);
+                for(let item of response.obj.list){
+                    if(!this.verifyDetect(item)){
+                        continue;
+                    }
 
-            if(isEmpty(response.obj.reportId)){
-                ElMessage.error('识别结果缺失报告编号，请换一张图试试');
-                return;
+                    let detectResult = {
+                        reportTime:item.reportTime,
+                        shipName:item.shipName,
+                        area:item.area,
+                        constellation:item.constellation,
+                        galaxy:item.galaxy,
+                        armyShortName:item.armyShortName,
+                        gameId:item.gameId,
+                        money:item.money,
+                        kmShip:item.kmShip,
+                        kmArmyShortName:item.kmArmyShortName,
+                        kmGameId:item.kmGameId,
+                        highATKShip:item.highATKShip,
+                        info:undefined,
+                        isModify:false,
+                        paymentId:this.paymentInfo.id,
+                        img:response.obj.img
+                    }
+
+                    this.detectResultList.push(detectResult);
+                }
             }
-            // if(isEmpty(response.obj.gameId)&&isEmpty(response.obj.armyShortName)){
+        },
+
+        verifyDetect(){
+            // if(isEmpty(value.gameId)&&isEmpty(value.armyShortName)){
             //     ElMessage.error('识别结果缺失身份信息，请换一张图试试');
             //     return;
             // }
-            // if(isEmpty(response.obj.shipName)){
+            // if(isEmpty(value.shipName)){
             //     ElMessage.error('识别结果缺失舰船名，请换一张图试试');
             //     return;
             // }
 
-            if(!isEmpty(this.paymentInfo.lossStartTime)){
-                if(!isEmpty(response.obj.reportTime)){
-                    let lossStartTime = new Date(this.paymentInfo.lossStartTime).getTime();
+            if(!isEmpty(this.killReportInfo.killStartTime)){
+                if(!isEmpty(value.reportTime)){
+                    let killStartTime = new Date(this.killReportInfo.killStartTime).getTime();
 
-                    let reportTime = new Date(response.obj.reportTime).getTime();
+                    let reportTime = new Date(value.reportTime).getTime();
 
-                    if(reportTime<lossStartTime){
+                    if(reportTime<killStartTime){
                         ElMessage.error('时间不合规');
-                        return;
+                        return false;
                     }
 
                 }else{
                     ElMessage.error('识别结果缺失时间，请换一张图试试');
-                    return;
+                    return false;
                 }
             }
 
-            if(!isEmpty(this.paymentInfo.lossEndTime)){
-                if(!isEmpty(response.obj.reportTime)){
-                    let lossEndTime = new Date(this.paymentInfo.lossEndTime).getTime();
+            if(!isEmpty(this.killReportInfo.killEndTime)){
+                if(!isEmpty(value.reportTime)){
+                    let killEndTime = new Date(this.killReportInfo.killEndTime).getTime();
 
-                    let reportTime = new Date(response.obj.reportTime).getTime();
+                    let reportTime = new Date(value.reportTime).getTime();
 
-                    if(reportTime>lossEndTime){
+                    if(reportTime>killEndTime){
                         ElMessage.error('时间不合规');
-                        return;
+                        return false;
                     }
                 }else{
                     ElMessage.error('识别结果缺失时间，请换一张图试试');
-                    return;
+                    return false;
                 }
             }
 
-            if(!isEmpty(this.paymentInfo.limitArea)){
-                if(!isEmpty(response.obj.area)){
-                    if(this.paymentInfo.limitArea.indexOf(response.obj.area)==-1){
+            if(!isEmpty(this.killReportInfo.limitArea)){
+                if(!isEmpty(value.area)){
+                    if(this.killReportInfo.limitArea.indexOf(value.area)==-1){
                         ElMessage.error('星域不合规');
-                        return;
+                        return false;
                     }
                 }else{
                     ElMessage.error('识别结果缺失星域，请换一张图试试');
-                    return;
+                    return false;
                 }
             }
 
-            // if(!isEmpty(this.paymentInfo.constellation)){
-            //     if(!isEmpty(response.obj.constellation)){
-            //         if(this.paymentInfo.limitConstellation.indexOf(response.obj.constellation)==-1){
+            // if(!isEmpty(this.killReportInfo.constellation)){
+            //     if(!isEmpty(value.constellation)){
+            //         if(this.killReportInfo.limitConstellation.indexOf(value.constellation)==-1){
             //             ElMessage.error('星域不合规');
             //             return;
             //         }
@@ -367,9 +419,9 @@ export default {
             // }
 
 
-            // if(!isEmpty(this.paymentInfo.limitGalaxy)){
-            //     if(!isEmpty(response.obj.galaxy)){
-            //         if(this.paymentInfo.limitGalaxy.indexOf(response.obj.galaxy)==-1){
+            // if(!isEmpty(this.killReportInfo.limitGalaxy)){
+            //     if(!isEmpty(value.galaxy)){
+            //         if(this.killReportInfo.limitGalaxy.indexOf(value.galaxy)==-1){
             //             ElMessage.error('星系不合规');
             //             return;
             //         }
@@ -378,14 +430,11 @@ export default {
             //         return;
             //     }
             // }
-            response.obj.info = undefined;
-            response.obj.isModify = false;
-            response.obj.paymentId = this.paymentInfo.id;
-            this.detectResultList[response.obj.reportId]=response.obj;
+            return true;
         },
 
-        removeResult(reportId){
-            delete this.detectResultList[reportId];
+        removeResult(index){
+            this.detectResultList.splice(index,1);
         },
 
         submit(){
@@ -409,6 +458,16 @@ export default {
                 }
                 
             });
+        },
+
+        applyArmy(){
+            for(let item of this.detectResultList){
+                if(item.armyShortName != this.applyArmyShortName){
+                    item.armyShortName = this.applyArmyShortName;
+                    item.isModify = true;
+                }
+            }
+            this.applyArmyModal = false;
         },
 
         thousandBitSeparator(str){ 

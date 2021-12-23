@@ -16,8 +16,8 @@
                         <div class="payment-item" style="font-weight:bolder">补损名- {{paymentInfo.name}}</div>
                         <div class="payment-item" style="font-weight:bolder">起始时间- {{paymentInfo.lossStartTime}}</div>
                         <div class="payment-item" style="font-weight:bolder">结束时间- {{paymentInfo.lossEndTime}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许地区- {{paymentInfo.limitArea}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许星域- {{paymentInfo.limitConstellation}}</div>
+                        <div class="payment-item" style="font-weight:bolder">允许星域- {{paymentInfo.limitArea}}</div>
+                        <div class="payment-item" style="font-weight:bolder">允许星座- {{paymentInfo.limitConstellation}}</div>
                         <div class="payment-item" style="font-weight:bolder">允许星系- {{paymentInfo.limitGalaxy}}</div>
                         <div class="payment-item" style="font-weight:bolder">截止时间- {{paymentInfo.endTime}}</div>
                         <div class="payment-item" style="font-weight:bolder;margin-top:20px">损失总额:  {{Math.round(totalLoss/100000000)}}亿星币</div>
@@ -214,7 +214,7 @@ export default {
                     sortData.push(res.obj[armyName]);
                 }
                 sortData.sort();
-                let max = parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000;
+                let max = parseInt(sortData[0]/100000000)*100000000+1000000000;
                 debugger
                 let option = {
                     backgroundColor:'#323a5e',
@@ -345,7 +345,7 @@ export default {
                     sortData.push(res.obj[shipType]);
                 }
                 sortData.sort();
-                let max = parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000;
+                let max = parseInt(sortData[0]/100000000)*100000000+1000000000;
 
                 let option = {
                     backgroundColor:'#323a5e',

@@ -87,6 +87,12 @@ export default {
                         allow:["超级管理",'联盟管理','军团管理'],
                         path:"armyFillLoss"
                     },
+                    {
+                        icon:require("@/assets/ship.png"),
+                        title:"军团击杀",
+                        allow:["超级管理",'联盟管理','军团管理'],
+                        path:"armyKillCount"
+                    },
                 ]
             },
             {

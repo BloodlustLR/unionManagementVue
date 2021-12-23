@@ -42,6 +42,16 @@ const routes = [
         component: () => import('../views/Menu/army/ArmyFillLossDetail')
       },
       {
+        path: 'armyKillCount',
+        name:'ArmyKillCount',
+        component: () => import('../views/Menu/army/ArmyKillCount')
+      },
+      {
+        path: 'armyKillCountDetail',
+        name:'ArmyKillCountDetail',
+        component: () => import('../views/Menu/army/ArmyKillCountDetail')
+      },
+      {
         path: 'filllossDetail',
         name:'FillLossDetail',
         component: () => import('../views/Menu/union/FillLossDetail')
