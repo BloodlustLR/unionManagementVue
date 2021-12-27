@@ -62,17 +62,38 @@ export default {
             {
                 title: '联盟',
                 color: 'rgba(116, 116, 223, 0.548)',
-                children:[{
-                    icon:require("@/assets/ship.png"),
-                    title:"补损办公室",
-                    allow:["超级管理","联盟管理"],
-                    path:"fillloss"
-                }]
+                children:[
+                    {
+                        icon:require("@/assets/ship.png"),
+                        title:"补损办公室",
+                        allow:["超级管理","联盟管理"],
+                        path:"fillloss"
+                    },
+                    {
+                        icon:require("@/assets/ship.png"),
+                        title:"击杀统计",
+                        allow:["超级管理","联盟管理"],
+                        path:"killCount"
+                    }   
+                ]
             },
             {
                 title:'军团',
                 color: 'darkgreen',
-                children:[]
+                children:[
+                    {
+                        icon:require("@/assets/ship.png"),
+                        title:"军团补损",
+                        allow:["超级管理",'联盟管理','军团管理'],
+                        path:"armyFillLoss"
+                    },
+                    {
+                        icon:require("@/assets/ship.png"),
+                        title:"军团击杀",
+                        allow:["超级管理",'联盟管理','军团管理'],
+                        path:"armyKillCount"
+                    },
+                ]
             },
             {
                 title:'个人',

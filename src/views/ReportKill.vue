@@ -1,15 +1,15 @@
 <template>
-<div class="reportPayment">
+<div class="reportKill">
     <div class="header">
         <div class="title">
-            {{paymentInfo.name}}
+            {{killReportInfo.name}}
         </div>
         <div class="header-right">
             <el-dropdown trigger="click">
                 <svg class="icon" width="30" height="30" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" data-v-365b8594="" style="margin-top:15px;margin-right:10px"><path fill="white" d="M176 416a112 112 0 100 224 112 112 0 000-224m0 64a48 48 0 110 96 48 48 0 010-96zm336-64a112 112 0 110 224 112 112 0 010-224zm0 64a48 48 0 100 96 48 48 0 000-96zm336-64a112 112 0 110 224 112 112 0 010-224zm0 64a48 48 0 100 96 48 48 0 000-96z"></path></svg>
                 <template #dropdown>
                 <el-dropdown-menu>
-                    <el-dropdown-item @click="detailModal=true">补损详情</el-dropdown-item>
+                    <el-dropdown-item @click="detailModal=true">击杀统计详情</el-dropdown-item>
                     <el-dropdown-item @click="applyArmyModal=true">批量修改军团</el-dropdown-item>
                     <el-dropdown-item @click="submit">提交</el-dropdown-item>
                 </el-dropdown-menu>
@@ -20,17 +20,15 @@
 
     <div class="list">
         <div v-for="(detectResult,index) in detectResultList" :key="index" class="list-item">
-            <el-card class="box-card" style="height:220px;width:90%;margin:10px auto;text-align:left">
+            <el-card class="box-card" style="height:240px;width:90%;margin:10px auto;text-align:left">
                 <div class="report-item">时间: {{detectResult.reportTime}}</div>
-                <div class="report-item">军团缩写: {{detectResult.armyShortName}}</div>
-                <div class="report-item">角色名: {{detectResult.gameId}}</div>
-                <div class="report-item">舰船名: {{detectResult.shipName}}</div>
+                <div class="report-item">军团缩写: {{detectResult.kmArmyShortName}}</div>
+                <div class="report-item">最后一击: {{detectResult.kmGameId}}</div>
+                <div class="report-item">击杀船型: {{detectResult.shipName}}</div>
                 <div class="report-item">星域: {{detectResult.area}}</div>
                 <div class="report-item">星座: {{detectResult.constellation}}</div>
                 <div class="report-item">星系: {{detectResult.galaxy}}</div>
                 <div class="report-item">金额: {{thousandBitSeparator(detectResult.money)}}</div>
-                <div class="report-item">最后一击: {{detectResult.kmShip}}</div>
-                <div class="report-item">最高伤害: {{detectResult.highATKShip}}</div>
 
                 <div class="box-remove" @click="removeResult(index)">X</div>
                 <div class="box-info">
@@ -42,6 +40,7 @@
                 </div>
             </el-card>
         </div>
+
         <div v-for="(item,key,index) in loadingList" :key="index" class="list-item">
             <el-card class="box-card" style="height:220px;width:90%;margin:10px auto;text-align:left">
                 <el-progress type="circle" :percentage="item" style="vertical-align:middle;margin-right:10%"/>
@@ -60,7 +59,7 @@
                 </div>
                 </template>
             </el-upload>
-            <span v-if="hasOutOfDate">此次补损已截止</span>
+            <span v-if="hasOutOfDate">此次统计已截止</span>
         </div>
         <div style="height:50px;width:100%;"></div>
         <div class="sumbit-button" @click="submit">
@@ -68,15 +67,15 @@
         </div>
     </div>
 
-    <el-dialog v-model="detailModal" title="补损详情" width="80%">
-        <div class="payment-box">
-            <div class="payment-item">补损编号-{{paymentInfo.id}}</div>
-            <div class="payment-item">补损名-{{paymentInfo.name}}</div>
-            <div class="payment-item">允许时间段-{{paymentInfo.lossStartTime}}<span v-show="paymentInfo.lossStartTime!=null&&paymentInfo.lossEndTime!=null">至</span>{{paymentInfo.lossEndTime}}</div>
-            <div class="payment-item">允许星域-{{paymentInfo.limitArea}}</div>
-            <div class="payment-item">允许星座-{{paymentInfo.limitConstellation}}</div>
-            <div class="payment-item">允许星系-{{paymentInfo.limitGalaxy}}</div>
-            <div class="payment-item">截止时间-{{paymentInfo.endTime}}</div>
+    <el-dialog v-model="detailModal" title="击杀统计详情" width="80%">
+        <div class="killReport-box">
+            <div class="killReport-item">击杀统计编号-{{killReportInfo.id}}</div>
+            <div class="killReport-item">击杀统计名-{{killReportInfo.name}}</div>
+            <div class="killReport-item">允许时间段-{{killReportInfo.killStartTime}}<span v-show="killReportInfo.killStartTime!=null&&killReportInfo.killEndTime!=null">至</span>{{killReportInfo.killEndTime}}</div>
+            <div class="killReport-item">允许星域-{{killReportInfo.limitArea}}</div>
+            <div class="killReport-item">允许星座-{{killReportInfo.limitConstellation}}</div>
+            <div class="killReport-item">允许星系-{{killReportInfo.limitGalaxy}}</div>
+            <div class="killReport-item">截止时间-{{killReportInfo.endTime}}</div>
         </div>
         <template #footer>
         <span class="dialog-footer">
@@ -89,47 +88,39 @@
         <div class="modify-box">
             <div class="modify-item">
                 <span style="margin-right:10px">时间</span>
-                <el-date-picker v-model="lossInfo.reportTime" type="datetime" placeholder="请选择损失时间" disabled></el-date-picker>
+                <el-date-picker v-model="killInfo.reportTime" type="datetime" placeholder="请选择损失时间" disabled></el-date-picker>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">军团简称</span>
-                <el-select v-model="lossInfo.armyShortName" placeholder="请选择军团简称" style="width:220px" filterable>
+                <el-select v-model="killInfo.armyShortName" placeholder="请选择军团简称" style="width:220px" filterable>
                     <el-option v-for="item in armyList" :key="item.shortName" :label="item.shortName" :value="item.shortName"></el-option>
                 </el-select>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">角色名</span>
-                <el-input v-model="lossInfo.gameId" placeholder="请输入角色名" style="width:220px"/>
+                <el-input v-model="killInfo.gameId" placeholder="请输入角色名" style="width:220px"/>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">舰船名</span>
-                <el-select v-model="lossInfo.shipName" placeholder="请选择舰船名" style="width:220px" filterable>
+                <el-select v-model="killInfo.shipName" placeholder="请选择舰船名" style="width:220px" filterable>
                     <el-option v-for="item in shipList" :key="item.name" :label="item.name" :value="item.name"></el-option>
                 </el-select>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">星域</span>
-                <el-input v-model="lossInfo.area" placeholder="请输入星域" style="width:220px" disabled/>
+                <el-input v-model="killInfo.area" placeholder="请输入星域" style="width:220px" disabled/>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">星座</span>
-                <el-input v-model="lossInfo.constellation" placeholder="请输入星座" style="width:220px"/>
+                <el-input v-model="killInfo.constellation" placeholder="请输入星座" style="width:220px"/>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">星系</span>
-                <el-input v-model="lossInfo.galaxy" placeholder="请输入星系" style="width:220px"/>
+                <el-input v-model="killInfo.galaxy" placeholder="请输入星系" style="width:220px"/>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">金额</span>
-                <el-input-number v-model="lossInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px" :disabled="killInfo.money!=''&&killInfo.money!=null"/>
-            </div>
-            <div class="modify-item">
-                <span style="margin-right:10px">最后一击</span>
-                <el-input v-model="lossInfo.kmShip" placeholder="请输入最后一击舰船名" style="width:220px"/>
-            </div>
-            <div class="modify-item">
-                <span style="margin-right:10px">最高伤害</span>
-                <el-input v-model="lossInfo.highATKShip" placeholder="请输入最高伤害舰船名" style="width:220px"/>
+                <el-input-number v-model="killInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px" :disabled="killInfo.money!=''&&killInfo.money!=null"/>
             </div>
         </div>
         <template #footer>
@@ -143,9 +134,9 @@
     <el-dialog v-model="imgModal" title="截图" width="80%">
         <img :src="imgSrc" style="width:100%;height:100%;"/>
         <template #footer>
-        <span class="dialog-footer">
-            <el-button @click="imgModal = false">关闭</el-button>
-        </span>
+            <span class="dialog-footer">
+                <el-button @click="imgModal = false">关闭</el-button>
+            </span>
         </template>
     </el-dialog>
 
@@ -173,12 +164,13 @@ export default {
         return{
             armyList:[],
             shipList:[],
-            paymentInfo:{
+            
+            killReportInfo:{
                 id:null,
                 name:null,
                 endTime:null,
-                lossStartTime:null,
-                lossEndTime:null,
+                killStartTime:null,
+                killEndTime:null,
                 limitArea:[],
                 limitConstellation:[],
                 limitGalaxy:[]
@@ -190,7 +182,7 @@ export default {
 
             detailModal:false,
             modifyModal:false,
-            lossInfo:{
+            killInfo:{
                 index:null,
                 reportId:null,
                 reportTime:null,
@@ -200,25 +192,23 @@ export default {
                 area:'',
                 constellation:'',
                 galaxy:'',
-                money:'',
-                kmShip:'',
-                highATKShip:''
+                money:''
             },
             imgSrc:'',
             imgModal:false,
-
+            
             applyArmyModal:false,
             applyArmyShortName:null
         }
     },
     created(){
-        this.paymentInfo.id = this.$route.query.pid;
+        this.killReportInfo.id = this.$route.query.pid;
         this.getAllArmy();
         this.getAllShip();
     },
     mounted(){
-        if(this.paymentInfo.id!=null){
-            this.getPaymentInfo();
+        if(this.killReportInfo.id!=null){
+            this.getKillReportInfo();
         }
     },
     methods:{
@@ -239,33 +229,29 @@ export default {
 
         openModifyModal(value,index){
             console.log(value);
-            this.lossInfo.index = index;
-            this.lossInfo.reportId = value.reportId;
-            this.lossInfo.reportTime = value.reportTime==null?null:new Date(value.reportTime);
-            this.lossInfo.armyShortName = value.armyShortName;
-            this.lossInfo.gameId = value.gameId;
-            this.lossInfo.shipName = value.shipName;
-            this.lossInfo.area = value.area;
-            this.lossInfo.constellation = value.constellation;
-            this.lossInfo.galaxy = value.galaxy;
-            this.lossInfo.money = Number(value.money);
-            this.lossInfo.kmShip = value.kmShip;
-            this.lossInfo.highATKShip = value.highATKShip;
+            this.killInfo.index = index;
+            this.killInfo.reportId = value.reportId;
+            this.killInfo.reportTime = value.reportTime==null?null:new Date(value.reportTime);
+            this.killInfo.armyShortName = value.kmArmyShortName;
+            this.killInfo.gameId = value.kmGameId;
+            this.killInfo.shipName = value.shipName;
+            this.killInfo.area = value.area;
+            this.killInfo.constellation = value.constellation;
+            this.killInfo.galaxy = value.galaxy;
+            this.killInfo.money = Number(value.money);
             this.modifyModal = true;
         },
 
         modifyData(){
-            this.detectResultList[this.lossInfo.index].reportTime = this.lossInfo.reportTime.format("yyyy-MM-dd hh:mm:ss");
-            this.detectResultList[this.lossInfo.index].armyShortName = this.lossInfo.armyShortName;
-            this.detectResultList[this.lossInfo.index].gameId = this.lossInfo.gameId;
-            this.detectResultList[this.lossInfo.index].shipName = this.lossInfo.shipName;
-            this.detectResultList[this.lossInfo.index].area = this.lossInfo.area;
-            this.detectResultList[this.lossInfo.index].constellation = this.lossInfo.constellation;
-            this.detectResultList[this.lossInfo.index].galaxy = this.lossInfo.galaxy;
-            this.detectResultList[this.lossInfo.index].money = this.lossInfo.money;
-            this.detectResultList[this.lossInfo.index].kmShip = this.lossInfo.kmShip;
-            this.detectResultList[this.lossInfo.index].highATKShip = this.lossInfo.highATKShip;
-            this.detectResultList[this.lossInfo.index].isModify = true;
+            this.detectResultList[this.killInfo.index].reportTime = this.killInfo.reportTime.format("yyyy-MM-dd hh:mm:ss");
+            this.detectResultList[this.killInfo.index].kmArmyShortName = this.killInfo.armyShortName;
+            this.detectResultList[this.killInfo.index].kmGameId = this.killInfo.gameId;
+            this.detectResultList[this.killInfo.index].shipName = this.killInfo.shipName;
+            this.detectResultList[this.killInfo.index].area = this.killInfo.area;
+            this.detectResultList[this.killInfo.index].constellation = this.killInfo.constellation;
+            this.detectResultList[this.killInfo.index].galaxy = this.killInfo.galaxy;
+            this.detectResultList[this.killInfo.index].money = this.killInfo.money;
+            this.detectResultList[this.killInfo.index].isModify = true;
             this.modifyModal = false;
         },
 
@@ -273,21 +259,21 @@ export default {
             this.imgSrc = imgSrc;
             this.imgModal = true;
         },
-        getPaymentInfo(){
-            this.$request.get("/payment/getPaymentInfo",{
-                pid:this.paymentInfo.id
+        getKillReportInfo(){
+            this.$request.get("/killReport/getKillReportInfo",{
+                pid:this.killReportInfo.id
             }).then(res=>{
-                this.paymentInfo.name = res.obj.name;
-                this.paymentInfo.endTime = res.obj.endTime;
-                this.paymentInfo.lossStartTime = res.obj.lossStartTime;
-                this.paymentInfo.lossEndTime = res.obj.lossEndTime;
-                this.paymentInfo.limitArea = JSON.parse(res.obj.limitArea);
-                this.paymentInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
-                this.paymentInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+                this.killReportInfo.name = res.obj.name;
+                this.killReportInfo.endTime = res.obj.endTime;
+                this.killReportInfo.killStartTime = res.obj.killStartTime;
+                this.killReportInfo.killEndTime = res.obj.killEndTime;
+                this.killReportInfo.limitArea = JSON.parse(res.obj.limitArea);
+                this.killReportInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
+                this.killReportInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
 
-                this.hasOutOfDate = new Date().getTime()>new Date(this.paymentInfo.endTime).getTime();
+                this.hasOutOfDate = new Date().getTime()>new Date(this.killReportInfo.endTime).getTime();
 
-                console.log(this.paymentInfo);
+                console.log(this.killReportInfo);
 
                 this.detailModal = true;
             })
@@ -312,6 +298,7 @@ export default {
         handleSuccess(response, file, fileList){
             console.log(response);
             delete this.loadingList[file.name];
+
             let num = 0;
             let errorList = [];
             if(response.obj.dataType&&response.obj.dataType=="single"){
@@ -319,7 +306,7 @@ export default {
                 if(verifyResult==null){
                     response.obj.info = undefined;
                     response.obj.isModify = false;
-                    response.obj.paymentId = this.paymentInfo.id;
+                    response.obj.killReportId = this.killReportInfo.id;
                     this.detectResultList.push(response.obj);
                     num++;
                 }else{
@@ -336,19 +323,14 @@ export default {
                             area:item.area,
                             constellation:item.constellation,
                             galaxy:item.galaxy,
-                            armyShortName:item.armyShortName,
-                            gameId:item.gameId,
+                            kmArmyShortName:item.armyShortName,
+                            kmGameId:item.gameId,
                             money:item.money,
-                            kmShip:item.kmShip,
-                            kmArmyShortName:item.kmArmyShortName,
-                            kmGameId:item.kmGameId,
-                            highATKShip:item.highATKShip,
                             info:undefined,
                             isModify:false,
-                            paymentId:this.paymentInfo.id,
+                            killReportId:this.killReportInfo.id,
                             img:response.obj.img
                         }
-
                         this.detectResultList.push(detectResult);
                         num++;
                     }else{
@@ -370,7 +352,6 @@ export default {
                 ElMessage.error('新增'+num+'条记录,'+errorInfo);
             }
 
-            
         },
 
         verifyDetect(value){
@@ -383,13 +364,13 @@ export default {
             //     return;
             // }
 
-            if(!isEmpty(this.paymentInfo.lossStartTime)){
+            if(!isEmpty(this.killReportInfo.killStartTime)){
                 if(!isEmpty(value.reportTime)){
-                    let lossStartTime = new Date(this.paymentInfo.lossStartTime).getTime();
+                    let killStartTime = new Date(this.killReportInfo.killStartTime).getTime();
 
                     let reportTime = new Date(value.reportTime).getTime();
 
-                    if(reportTime<lossStartTime){
+                    if(reportTime<killStartTime){
                         // ElMessage.error('时间不合规');
                         // return false;
                         return '时间不合规';
@@ -402,13 +383,13 @@ export default {
                 }
             }
 
-            if(!isEmpty(this.paymentInfo.lossEndTime)){
+            if(!isEmpty(this.killReportInfo.killEndTime)){
                 if(!isEmpty(value.reportTime)){
-                    let lossEndTime = new Date(this.paymentInfo.lossEndTime).getTime();
+                    let killEndTime = new Date(this.killReportInfo.killEndTime).getTime();
 
                     let reportTime = new Date(value.reportTime).getTime();
 
-                    if(reportTime>lossEndTime){
+                    if(reportTime>killEndTime){
                         // ElMessage.error('时间不合规');
                         // return false;
                         return '时间不合规';
@@ -416,13 +397,13 @@ export default {
                 }else{
                     // ElMessage.error('识别结果缺失时间，请换一张图试试');
                     // return false;
-                    return '识别结果缺失时间，请换一张图试试';
+                    return '识别结果缺失时间';
                 }
             }
 
-            if(!isEmpty(this.paymentInfo.limitArea)){
+            if(!isEmpty(this.killReportInfo.limitArea)){
                 if(!isEmpty(value.area)){
-                    if(this.paymentInfo.limitArea.indexOf(value.area)==-1){
+                    if(this.killReportInfo.limitArea.indexOf(value.area)==-1){
                         // ElMessage.error('星域不合规');
                         // return false;
                         return '星域不合规';
@@ -434,9 +415,9 @@ export default {
                 }
             }
 
-            // if(!isEmpty(this.paymentInfo.constellation)){
+            // if(!isEmpty(this.killReportInfo.constellation)){
             //     if(!isEmpty(value.constellation)){
-            //         if(this.paymentInfo.limitConstellation.indexOf(value.constellation)==-1){
+            //         if(this.killReportInfo.limitConstellation.indexOf(value.constellation)==-1){
             //             ElMessage.error('星域不合规');
             //             return;
             //         }
@@ -447,9 +428,9 @@ export default {
             // }
 
 
-            // if(!isEmpty(this.paymentInfo.limitGalaxy)){
+            // if(!isEmpty(this.killReportInfo.limitGalaxy)){
             //     if(!isEmpty(value.galaxy)){
-            //         if(this.paymentInfo.limitGalaxy.indexOf(value.galaxy)==-1){
+            //         if(this.killReportInfo.limitGalaxy.indexOf(value.galaxy)==-1){
             //             ElMessage.error('星系不合规');
             //             return;
             //         }
@@ -458,6 +439,7 @@ export default {
             //         return;
             //     }
             // }
+            // return true;
             return null;
         },
 
@@ -465,8 +447,18 @@ export default {
             this.detectResultList.splice(index,1);
         },
 
+        applyArmy(){
+            for(let item of this.detectResultList){
+                if(item.kmArmyShortName != this.applyArmyShortName){
+                    item.kmArmyShortName = this.applyArmyShortName;
+                    item.isModify = true;
+                }
+            }
+            this.applyArmyModal = false;
+        },
+
         submit(){
-            this.$request.post("/loss/addLoss",this.detectResultList).then(res=>{
+            this.$request.post("/kill/addKill",this.detectResultList).then(res=>{
                 let count = 0;
                 for(let key in res.obj){
                     count++;
@@ -486,16 +478,6 @@ export default {
                 }
                 
             });
-        },
-
-        applyArmy(){
-            for(let item of this.detectResultList){
-                if(item.armyShortName != this.applyArmyShortName){
-                    item.armyShortName = this.applyArmyShortName;
-                    item.isModify = true;
-                }
-            }
-            this.applyArmyModal = false;
         },
 
         thousandBitSeparator(str){ 
@@ -555,26 +537,17 @@ function isEmpty(value) {
 }
 </script>
 <style lang="less">
-.reportPayment{
+.reportKill{
     height:100%;
     width:100%;
     text-align: center;
 
-    .payment-box{
-        text-align: left;
 
-        .payment-item{
-            line-height:20px;
-        }
-    }
-
-    .report-box{
+    .killReport-box{
         margin-top:50px;
         text-align: left;
 
-
-        .report-item{
-            height:20px;
+        .killReport-item{
             line-height:20px;
         }
     }
@@ -652,6 +625,7 @@ function isEmpty(value) {
                     right:20px;
                     bottom:20px;
                     color:tomato;
+                    text-align: right;
 
                 }
 

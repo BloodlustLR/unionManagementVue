@@ -1,64 +1,87 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
-import Login from '../views/Login.vue'
-import Home from '../views/Home.vue'
-import ReportPayment from '../views/ReportPayment.vue'
-
-import Topic from '../views/Menu/Topic'
-import FillLoss from '../views/Menu/union/FillLoss'
-import FillLossDetail from '../views/Menu/union/FillLossDetail'
-import UserManage from '../views/Menu/sys/userManage'
-
-import UnionArmy from '../views/Menu/sys/unionArmy'
-import Ship from '../views/Menu/sys/ship'
-
 const routes = [
   {
     path: '/',
     name: 'Login',
-    component: Login
+    component:() => import('../views/Login.vue')
   },
   {
     path: '/home',
     name: 'Home',
-    component: Home,
+    component: () => import('../views/Home.vue'),
     redirect: '/home/topic',
     children: [
       {
         path: 'topic',
         name:'Topic',
-        component: Topic
+        component: () => import('../views/Menu/Topic.vue')
       },
       {
         path: 'fillloss',
         name:'FillLoss',
-        component: FillLoss
+        component: () => import('../views/Menu/union/FillLoss')
+      },
+      {
+        path: 'killCount',
+        name:'KillCount',
+        component: () => import('../views/Menu/union/KillCount')
+      },
+      {
+        path: 'killCountDetail',
+        name:'KillCountDetail',
+        component: () => import('../views/Menu/union/KillCountDetail')
+      },
+      {
+        path: 'armyFillLoss',
+        name:'ArmyFillLoss',
+        component: () => import('../views/Menu/army/ArmyFillLoss')
+      },
+      {
+        path: 'armyFillLossDetail',
+        name:'ArmyFillLossDetail',
+        component: () => import('../views/Menu/army/ArmyFillLossDetail')
+      },
+      {
+        path: 'armyKillCount',
+        name:'ArmyKillCount',
+        component: () => import('../views/Menu/army/ArmyKillCount')
+      },
+      {
+        path: 'armyKillCountDetail',
+        name:'ArmyKillCountDetail',
+        component: () => import('../views/Menu/army/ArmyKillCountDetail')
       },
       {
         path: 'filllossDetail',
         name:'FillLossDetail',
-        component: FillLossDetail
+        component: () => import('../views/Menu/union/FillLossDetail')
       },
       {
         path:'unionArmy',
         name:'UnionArmy',
-        component: UnionArmy
+        component: () => import('../views/Menu/sys/unionArmy')
       },
       {
         path:'ship',
         name:'Ship',
-        component: Ship
+        component: () => import('../views/Menu/sys/ship')
       },
       {
         path:'userManage',
         name:'UserManage',
-        component: UserManage
+        component: () => import('../views/Menu/sys/userManage')
       }
     ]
   },
   {
     path: '/reportPayment',
     name: 'ReportPayment',
-    component: ReportPayment
+    component: () => import('../views/ReportPayment.vue')
+  },
+  {
+    path: '/reportKill',
+    name: 'ReportKill',
+    component: () => import('../views/ReportKill.vue')
   },
 ]
 
