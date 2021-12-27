@@ -297,7 +297,7 @@ export default {
                 sortData.sort();
                 let max = 1000000000;
                 if(sortData.length>0){
-                    max += parseInt(sortData[0]/100000000)*100000000;
+                    max += parseInt(sortData[sortData.length-1]/100000000)*100000000;
                 }
 
                 let option = {

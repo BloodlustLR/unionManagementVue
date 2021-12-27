@@ -345,7 +345,7 @@ export default {
                     sortData.push(res.obj[shipType]);
                 }
                 sortData.sort();
-                let max = parseInt(sortData[0]/100000000)*100000000+1000000000;
+                let max = parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000;
 
                 let option = {
                     backgroundColor:'#323a5e',

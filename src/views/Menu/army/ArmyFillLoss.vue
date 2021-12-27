@@ -43,7 +43,7 @@ export default {
     },
     methods:{
         copyLink(id){
-            let url = "http://"+window.location.host+"/#/reportPayment?pid="+id;
+            let url = "http://"+window.location.host+"/unionManagement/#/reportPayment?pid="+id;
             copyText(url);
             ElMessage({
                 message: '补损链接已复制到剪贴板',

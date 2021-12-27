@@ -71,7 +71,7 @@
         </div>
         <template #footer>
             <span class="dialog-footer">
-                <el-button @click="addPaymentModal = false">取消</el-button>
+                <el-button @click="addKillReportModal = false">取消</el-button>
                 <el-button type="primary" @click="addKillReport">新增</el-button>
             </span>
         </template>

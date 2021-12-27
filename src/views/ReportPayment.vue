@@ -305,53 +305,75 @@ export default {
         },
 
         uploadProgress(event, file, fileList){
-            this.loadingList[file.name] = Number((event.loaded/event.total).toFixed(1));
+            this.loadingList[file.name] = Number((event.percent).toFixed(1));
             console.log(event, file, fileList);
         },
 
         handleSuccess(response, file, fileList){
             console.log(response);
             delete this.loadingList[file.name];
+            let num = 0;
+            let errorList = [];
             if(response.obj.dataType&&response.obj.dataType=="single"){
-                if(!this.verifyDetect(response.obj)){
-                    return ;
+                let verifyResult = this.verifyDetect(response.obj);
+                if(verifyResult==null){
+                    response.obj.info = undefined;
+                    response.obj.isModify = false;
+                    response.obj.paymentId = this.paymentInfo.id;
+                    this.detectResultList.push(response.obj);
+                    num++;
+                }else{
+                    errorList.push("【"+response.obj.shipName+"】"+verifyResult);
                 }
-                response.obj.info = undefined;
-                response.obj.isModify = false;
-                response.obj.paymentId = this.paymentInfo.id;
-                this.detectResultList.push(response.obj);
             }else if(response.obj.dataType&&response.obj.dataType=="multiple"){
                 console.log(response.obj.list);
                 for(let item of response.obj.list){
-                    if(!this.verifyDetect(item)){
-                        continue;
-                    }
+                    let verifyResult = this.verifyDetect(item);
+                    if(verifyResult==null){
+                        let detectResult = {
+                            reportTime:item.reportTime,
+                            shipName:item.shipName,
+                            area:item.area,
+                            constellation:item.constellation,
+                            galaxy:item.galaxy,
+                            armyShortName:item.armyShortName,
+                            gameId:item.gameId,
+                            money:item.money,
+                            kmShip:item.kmShip,
+                            kmArmyShortName:item.kmArmyShortName,
+                            kmGameId:item.kmGameId,
+                            highATKShip:item.highATKShip,
+                            info:undefined,
+                            isModify:false,
+                            paymentId:this.paymentInfo.id,
+                            img:response.obj.img
+                        }
 
-                    let detectResult = {
-                        reportTime:item.reportTime,
-                        shipName:item.shipName,
-                        area:item.area,
-                        constellation:item.constellation,
-                        galaxy:item.galaxy,
-                        armyShortName:item.armyShortName,
-                        gameId:item.gameId,
-                        money:item.money,
-                        kmShip:item.kmShip,
-                        kmArmyShortName:item.kmArmyShortName,
-                        kmGameId:item.kmGameId,
-                        highATKShip:item.highATKShip,
-                        info:undefined,
-                        isModify:false,
-                        paymentId:this.paymentInfo.id,
-                        img:response.obj.img
+                        this.detectResultList.push(detectResult);
+                        num++;
+                    }else{
+                        errorList.push("【"+item.shipName+"】"+verifyResult);
                     }
-
-                    this.detectResultList.push(detectResult);
                 }
             }
+            if(errorList.length==0){
+                ElMessage({
+                    message: '新增'+num+'条记录',
+                    type: 'success',
+                })
+            }else{
+                let errorInfo = '';
+                for(let item of errorList){
+                    errorInfo+=item+','
+                }
+                errorInfo = errorInfo.substring(0,errorInfo.length-1);
+                ElMessage.error('新增'+num+'条记录,'+errorInfo);
+            }
+
+            
         },
 
-        verifyDetect(){
+        verifyDetect(value){
             // if(isEmpty(value.gameId)&&isEmpty(value.armyShortName)){
             //     ElMessage.error('识别结果缺失身份信息，请换一张图试试');
             //     return;
@@ -361,54 +383,60 @@ export default {
             //     return;
             // }
 
-            if(!isEmpty(this.killReportInfo.killStartTime)){
+            if(!isEmpty(this.paymentInfo.lossStartTime)){
                 if(!isEmpty(value.reportTime)){
-                    let killStartTime = new Date(this.killReportInfo.killStartTime).getTime();
+                    let lossStartTime = new Date(this.paymentInfo.lossStartTime).getTime();
 
                     let reportTime = new Date(value.reportTime).getTime();
 
-                    if(reportTime<killStartTime){
-                        ElMessage.error('时间不合规');
-                        return false;
+                    if(reportTime<lossStartTime){
+                        // ElMessage.error('时间不合规');
+                        // return false;
+                        return '时间不合规';
                     }
 
                 }else{
-                    ElMessage.error('识别结果缺失时间，请换一张图试试');
-                    return false;
+                    // ElMessage.error('识别结果缺失时间，请换一张图试试');
+                    // return false;
+                    return '识别结果缺失时间';
                 }
             }
 
-            if(!isEmpty(this.killReportInfo.killEndTime)){
+            if(!isEmpty(this.paymentInfo.lossEndTime)){
                 if(!isEmpty(value.reportTime)){
-                    let killEndTime = new Date(this.killReportInfo.killEndTime).getTime();
+                    let lossEndTime = new Date(this.paymentInfo.lossEndTime).getTime();
 
                     let reportTime = new Date(value.reportTime).getTime();
 
-                    if(reportTime>killEndTime){
-                        ElMessage.error('时间不合规');
-                        return false;
+                    if(reportTime>lossEndTime){
+                        // ElMessage.error('时间不合规');
+                        // return false;
+                        return '时间不合规';
                     }
                 }else{
-                    ElMessage.error('识别结果缺失时间，请换一张图试试');
-                    return false;
+                    // ElMessage.error('识别结果缺失时间，请换一张图试试');
+                    // return false;
+                    return '识别结果缺失时间，请换一张图试试';
                 }
             }
 
-            if(!isEmpty(this.killReportInfo.limitArea)){
+            if(!isEmpty(this.paymentInfo.limitArea)){
                 if(!isEmpty(value.area)){
-                    if(this.killReportInfo.limitArea.indexOf(value.area)==-1){
-                        ElMessage.error('星域不合规');
-                        return false;
+                    if(this.paymentInfo.limitArea.indexOf(value.area)==-1){
+                        // ElMessage.error('星域不合规');
+                        // return false;
+                        return '星域不合规';
                     }
                 }else{
-                    ElMessage.error('识别结果缺失星域，请换一张图试试');
-                    return false;
+                    // ElMessage.error('识别结果缺失星域，请换一张图试试');
+                    // return false;
+                    return '识别结果缺失星域';
                 }
             }
 
-            // if(!isEmpty(this.killReportInfo.constellation)){
+            // if(!isEmpty(this.paymentInfo.constellation)){
             //     if(!isEmpty(value.constellation)){
-            //         if(this.killReportInfo.limitConstellation.indexOf(value.constellation)==-1){
+            //         if(this.paymentInfo.limitConstellation.indexOf(value.constellation)==-1){
             //             ElMessage.error('星域不合规');
             //             return;
             //         }
@@ -419,9 +447,9 @@ export default {
             // }
 
 
-            // if(!isEmpty(this.killReportInfo.limitGalaxy)){
+            // if(!isEmpty(this.paymentInfo.limitGalaxy)){
             //     if(!isEmpty(value.galaxy)){
-            //         if(this.killReportInfo.limitGalaxy.indexOf(value.galaxy)==-1){
+            //         if(this.paymentInfo.limitGalaxy.indexOf(value.galaxy)==-1){
             //             ElMessage.error('星系不合规');
             //             return;
             //         }
@@ -430,7 +458,7 @@ export default {
             //         return;
             //     }
             // }
-            return true;
+            return null;
         },
 
         removeResult(index){
@@ -448,7 +476,7 @@ export default {
                         message: '上报成功',
                         type: 'success',
                     })
-                    this.detectResultList = {};
+                    this.detectResultList = [];
                 }else{
                     ElMessage({
                         message: '部分上报失败的内容已返回',

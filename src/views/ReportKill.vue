@@ -59,7 +59,7 @@
                 </div>
                 </template>
             </el-upload>
-            <span v-if="hasOutOfDate">此次补损已截止</span>
+            <span v-if="hasOutOfDate">此次统计已截止</span>
         </div>
         <div style="height:50px;width:100%;"></div>
         <div class="sumbit-button" @click="submit">
@@ -291,7 +291,7 @@ export default {
         },
 
         uploadProgress(event, file, fileList){
-            this.loadingList[file.name] = Number((event.loaded/event.total).toFixed(1));
+            this.loadingList[file.name] = Number((event.percent).toFixed(1));
             console.log(event, file, fileList);
         },
 
@@ -299,39 +299,57 @@ export default {
             console.log(response);
             delete this.loadingList[file.name];
 
+            let num = 0;
+            let errorList = [];
             if(response.obj.dataType&&response.obj.dataType=="single"){
-                if(!this.verifyDetect(response.obj)){
-                    return ;
+                let verifyResult = this.verifyDetect(response.obj);
+                if(verifyResult==null){
+                    response.obj.info = undefined;
+                    response.obj.isModify = false;
+                    response.obj.killReportId = this.killReportInfo.id;
+                    this.detectResultList.push(response.obj);
+                    num++;
+                }else{
+                    errorList.push("【"+response.obj.shipName+"】"+verifyResult);
                 }
-
-                response.obj.info = undefined;
-                response.obj.isModify = false;
-                response.obj.killReportId = this.killReportInfo.id;
-                this.detectResultList.push(response.obj);
             }else if(response.obj.dataType&&response.obj.dataType=="multiple"){
                 console.log(response.obj.list);
                 for(let item of response.obj.list){
-                    if(!this.verifyDetect(item)){
-                        continue;
+                    let verifyResult = this.verifyDetect(item);
+                    if(verifyResult==null){
+                        let detectResult = {
+                            reportTime:item.reportTime,
+                            shipName:item.shipName,
+                            area:item.area,
+                            constellation:item.constellation,
+                            galaxy:item.galaxy,
+                            kmArmyShortName:item.armyShortName,
+                            kmGameId:item.gameId,
+                            money:item.money,
+                            info:undefined,
+                            isModify:false,
+                            killReportId:this.killReportInfo.id,
+                            img:response.obj.img
+                        }
+                        this.detectResultList.push(detectResult);
+                        num++;
+                    }else{
+                        errorList.push("【"+item.shipName+"】"+verifyResult);
                     }
-
-                    let detectResult = {
-                        reportTime:item.reportTime,
-                        shipName:item.shipName,
-                        area:item.area,
-                        constellation:item.constellation,
-                        galaxy:item.galaxy,
-                        kmArmyShortName:item.armyShortName,
-                        kmGameId:item.gameId,
-                        money:item.money,
-                        info:undefined,
-                        isModify:false,
-                        killReportId:this.killReportInfo.id,
-                        img:response.obj.img
-                    }
-
-                    this.detectResultList.push(detectResult);
                 }
+            }
+            if(errorList.length==0){
+                ElMessage({
+                    message: '新增'+num+'条记录',
+                    type: 'success',
+                })
+            }else{
+                let errorInfo = '';
+                for(let item of errorList){
+                    errorInfo+=item+','
+                }
+                errorInfo = errorInfo.substring(0,errorInfo.length-1);
+                ElMessage.error('新增'+num+'条记录,'+errorInfo);
             }
 
         },
@@ -353,13 +371,15 @@ export default {
                     let reportTime = new Date(value.reportTime).getTime();
 
                     if(reportTime<killStartTime){
-                        ElMessage.error('时间不合规');
-                        return false;
+                        // ElMessage.error('时间不合规');
+                        // return false;
+                        return '时间不合规';
                     }
 
                 }else{
-                    ElMessage.error('识别结果缺失时间，请换一张图试试');
-                    return false;
+                    // ElMessage.error('识别结果缺失时间，请换一张图试试');
+                    // return false;
+                    return '识别结果缺失时间';
                 }
             }
 
@@ -370,24 +390,28 @@ export default {
                     let reportTime = new Date(value.reportTime).getTime();
 
                     if(reportTime>killEndTime){
-                        ElMessage.error('时间不合规');
-                        return false;
+                        // ElMessage.error('时间不合规');
+                        // return false;
+                        return '时间不合规';
                     }
                 }else{
-                    ElMessage.error('识别结果缺失时间，请换一张图试试');
-                    return false;
+                    // ElMessage.error('识别结果缺失时间，请换一张图试试');
+                    // return false;
+                    return '识别结果缺失时间';
                 }
             }
 
             if(!isEmpty(this.killReportInfo.limitArea)){
                 if(!isEmpty(value.area)){
                     if(this.killReportInfo.limitArea.indexOf(value.area)==-1){
-                        ElMessage.error('星域不合规');
-                        return false;
+                        // ElMessage.error('星域不合规');
+                        // return false;
+                        return '星域不合规';
                     }
                 }else{
-                    ElMessage.error('识别结果缺失星域，请换一张图试试');
-                    return false;
+                    // ElMessage.error('识别结果缺失星域，请换一张图试试');
+                    // return false;
+                    return '识别结果缺失星域';
                 }
             }
 
@@ -415,7 +439,8 @@ export default {
             //         return;
             //     }
             // }
-            return true;
+            // return true;
+            return null;
         },
 
         removeResult(index){
