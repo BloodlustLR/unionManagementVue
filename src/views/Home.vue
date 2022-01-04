@@ -121,7 +121,13 @@ export default {
                         title:"舰船库",
                         allow:["超级管理"],
                         path:"ship"
-                    },                    
+                    },
+                    // {
+                    //     icon:require("@/assets/ship.png"),
+                    //     title:"系统",
+                    //     allow:["超级管理"],
+                    //     path:"system"
+                    // },                
                 ]
             }]
         }
@@ -144,6 +150,8 @@ export default {
         console.log(loginInfo);
 
         this.$store.commit("handleLogin",loginInfo);
+
+        this.loadSystem();
     },
     methods:{
         /**
@@ -176,6 +184,16 @@ export default {
          */
         backToTopic(){
             this.$refs.mainView.$router.push("topic");
+        },
+
+        /**
+         * 读取系统设定
+         */
+        loadSystem(){
+            this.$request.get("/sys/getInfo").then(res=>{
+                console.log(res);
+                this.$store.commit("handleSystemInfo",res.obj);
+            })
         },
 
         /**

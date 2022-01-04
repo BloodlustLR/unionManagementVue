@@ -9,6 +9,9 @@ export default createStore({
       army:null,
       union:null,
       role:null
+    },
+    systemInfo:{
+      rate:1
     }
   },
   mutations: {
@@ -27,11 +30,19 @@ export default createStore({
       state.loginInfo.army = null;
       state.loginInfo.union = null;
       state.loginInfo.role = null;
+    },
+    handleSystemInfo: (state, systemInfoList) => {
+      for(let item of systemInfoList){
+        state.systemInfo[item.name] = item.value;
+      }
     }
   },
   actions: {
 
   },
   modules: {
+  },
+  getters: {  //只依赖state中的成员去更新
+    systemInfo: (state) => state.systemInfo
   }
 })

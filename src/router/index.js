@@ -70,6 +70,11 @@ const routes = [
         path:'userManage',
         name:'UserManage',
         component: () => import('../views/Menu/sys/userManage')
+      },
+      {
+        path:'system',
+        name:'System',
+        component: () => import('../views/Menu/sys/system')
       }
     ]
   },
