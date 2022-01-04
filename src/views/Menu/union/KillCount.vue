@@ -11,10 +11,11 @@
             <el-table-column prop="createTime" label="发布日期"/>
             <el-table-column prop="name" label="击杀统计名"/>
             <el-table-column prop="endTime" label="截止时间"/>
-            <el-table-column label="操作" width="300">
+            <el-table-column label="操作" width="400">
                 <template #default="scope">
                     <el-button type="success" size="small" @click="copyLink(scope.row.id)">复制链接</el-button>
                     <el-button type="primary" size="small" @click="checkDetail(scope.row.id)">查看详情</el-button>
+                    <el-button type="warning" size="small" @click="openConfigKillReportModal(scope.row)">配置</el-button>
                     <el-button type="danger" size="small" @click="removeKillReport(scope.row.id)">删除</el-button>
                 </template>
             </el-table-column>
@@ -76,6 +77,59 @@
             </span>
         </template>
     </el-dialog>
+
+    <el-dialog v-model="configKillReportModal" title="新建击杀统计" width="800px" :close-on-click-modal="false">
+        <div style="height:500px;overflow-y:auto;">
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                击杀统计名称:<el-input v-model="configKillReportInfo.name" placeholder="请输入击杀统计名称" style="width:400px;margin-left:10px;"/>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                截止时间:<el-date-picker v-model="configKillReportInfo.endTime" type="datetime" placeholder="请选择截止时间" style="width:200px;margin-left:10px;"></el-date-picker>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                限制时间:<el-switch v-model="configKillReportInfo.hasLimitTime" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+            </div>
+            <div v-show="configKillReportInfo.hasLimitTime" style="width:600px;margin:0 auto;text-align:left;">
+                <el-date-picker v-model="configKillReportInfo.limitTime" type="datetimerange" range-separator="至" start-placeholder="起始时间" end-placeholder="结束时间"></el-date-picker>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                限制星域:<el-switch v-model="configKillReportInfo.hasLimitArea" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+                <div v-show="configKillReportInfo.hasLimitArea" class="element-add" @click="configKillReportInfo.limitAreaList.push('')">+</div>
+            </div>
+            <div v-show="configKillReportInfo.hasLimitArea" style="width:600px;margin:0 auto;text-align:left;">
+                <div v-for="(item,index) in configKillReportInfo.limitAreaList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
+                    <el-input v-model="configKillReportInfo.limitAreaList[index]" placeholder="请输入星域名" size="mini" style="width:120px;margin-left:10px;"/>
+                    <div class="element-remove" @click="configKillReportInfo.limitAreaList.splice(index,1)">x</div>
+                </div>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                限制星座:<el-switch v-model="configKillReportInfo.hasLimitConstellation" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+                <div v-show="configKillReportInfo.hasLimitConstellation" class="element-add" @click="configKillReportInfo.limitConstellationList.push('')">+</div>
+            </div>
+            <div v-show="configKillReportInfo.hasLimitConstellation" style="width:600px;margin:0 auto;text-align:left;">
+                <div v-for="(item,index) in configKillReportInfo.limitConstellationList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
+                    <el-input v-model="configKillReportInfo.limitConstellationList[index]" placeholder="请输入星座名" size="mini" style="width:120px;margin-left:10px;"/>
+                    <div class="element-remove" @click="configKillReportInfo.limitConstellationList.splice(index,1)">x</div>
+                </div>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                限制星系:<el-switch v-model="configKillReportInfo.hasLimitGalaxy" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+                <div v-show="configKillReportInfo.hasLimitGalaxy" class="element-add" @click="configKillReportInfo.limitGalaxyList.push('')">+</div>
+            </div>
+            <div v-show="configKillReportInfo.hasLimitGalaxy" style="width:600px;margin:0 auto;text-align:left;">
+                <div v-for="(item,index) in configKillReportInfo.limitGalaxyList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
+                    <el-input v-model="configKillReportInfo.limitGalaxyList[index]" placeholder="请输入星系名" size="mini" style="width:120px;margin-left:10px;"/>
+                    <div class="element-remove" @click="configKillReportInfo.limitGalaxyList.splice(index,1)">x</div>
+                </div>
+            </div>
+        </div>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="configKillReportModal = false">取消</el-button>
+                <el-button type="primary" @click="configKillReport">配置</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </div>
 </template>
 <script>
@@ -95,6 +149,21 @@ export default {
 
             addKillReportModal:false,
             addKillReportInfo:{
+                name:'',
+                endTime:new Date(),
+                hasLimitTime:false,
+                limitTime:[new Date(),new Date()],
+                hasLimitArea:false,
+                limitAreaList:[''],
+                hasLimitConstellation:false,
+                limitConstellationList:[''],
+                hasLimitGalaxy:false,
+                limitGalaxyList:['']
+            },
+
+            configKillReportModal:false,
+            configKillReportInfo:{
+                id:null,
                 name:'',
                 endTime:new Date(),
                 hasLimitTime:false,
@@ -221,6 +290,82 @@ export default {
                 }
             })
         },
+
+        openConfigKillReportModal(data){
+
+            this.$request.get("/killReport/getKillReportInfo",{
+                pid:data.id
+            }).then(res=>{
+                console.log('res',res);
+                let killReportInfo = res.obj;
+
+                this.configKillReportInfo={
+                    id:killReportInfo.id,
+                    name:killReportInfo.name,
+                    endTime:new Date(killReportInfo.endTime),
+                    hasLimitTime:killReportInfo.lossStartTime!=null&&killReportInfo.lossEndTime!=null,
+                    limitTime:[new Date(killReportInfo.lossStartTime),new Date(killReportInfo.lossEndTime)],
+                    hasLimitArea:killReportInfo.limitArea!=null,
+                    limitAreaList:killReportInfo.limitArea==null?['']:JSON.parse(killReportInfo.limitArea),
+                    hasLimitConstellation:killReportInfo.limitConstellation!=null,
+                    limitConstellationList:killReportInfo.limitConstellation==null?['']:JSON.parse(killReportInfo.limitConstellation),
+                    hasLimitGalaxy:killReportInfo.limitGalaxy!=null,
+                    limitGalaxyList:killReportInfo.limitGalaxy==null?['']:JSON.parse(killReportInfo.limitGalaxy)
+                }
+                this.configKillReportModal = true;
+            })
+        },
+
+        configKillReport(){
+            if(isEmpty(this.configKillReportInfo.name)){
+                ElMessage({
+                    message: '请先补全数据',
+                    type: 'warning',
+                })
+                return;
+            }
+
+            //整理地区
+            let limitAreaList = [];
+            for(let item of this.configKillReportInfo.limitAreaList){
+                if(!isEmpty(item)){
+                    limitAreaList.push(item);
+                }
+            }
+            this.configKillReportInfo.limitAreaList = limitAreaList;
+
+            //整理星域
+            let limitConstellationList = [];
+            for(let item of this.configKillReportInfo.limitConstellationList){
+                if(!isEmpty(item)){
+                    limitConstellationList.push(item);
+                }
+            }
+            this.configKillReportInfo.limitConstellationList = limitConstellationList;
+
+            //整理星系
+            let limitGalaxyList = [];
+            for(let item of this.configKillReportInfo.limitGalaxyList){
+                if(!isEmpty(item)){
+                    limitGalaxyList.push(item);
+                }
+            }
+            this.configKillReportInfo.limitGalaxyList = limitGalaxyList;
+
+            this.$request.post("/killReport/configKillReport",this.configKillReportInfo).then(res =>{
+                if(res.obj=="success"){
+                    ElMessage({
+                        message: '配置成功',
+                        type: 'success',
+                    })
+                    this.configKillReportModal = false;
+                    this.filterAll();
+                }else{
+                    ElMessage.error('配置失败');
+                }
+            })
+        },
+
 
         removeKillReport(id){
             ElMessageBox.confirm(
