@@ -12,10 +12,11 @@
             <el-table-column prop="createTime" label="发布日期"/>
             <el-table-column prop="name" label="补损名"/>
             <el-table-column prop="endTime" label="截止时间"/>
-            <el-table-column label="操作" width="300">
+            <el-table-column label="操作" width="400">
                 <template #default="scope">
                     <el-button type="success" size="small" @click="copyLink(scope.row.id)">复制链接</el-button>
                     <el-button type="primary" size="small" @click="checkDetail(scope.row.id)">查看详情</el-button>
+                    <el-button type="warning" size="small" @click="openConfigPaymentModal(scope.row)">配置</el-button>
                     <el-button type="danger" size="small" @click="removePayment(scope.row.id)">删除</el-button>
                 </template>
             </el-table-column>
@@ -111,6 +112,65 @@
             </span>
         </template>
     </el-dialog>
+
+
+    <el-dialog v-model="configPaymentModal" title="配置补损" width="800px" :close-on-click-modal="false">
+        <div style="height:500px;overflow-y:auto;">
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                补损名称:<el-input v-model="configPaymentInfo.name" placeholder="请输入补损名称" style="width:400px;margin-left:10px;"/>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                截止时间:<el-date-picker v-model="configPaymentInfo.endTime" type="datetime" placeholder="请选择截止时间" style="width:200px;margin-left:10px;"></el-date-picker>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;">
+                补损标准:<el-select v-model="configPaymentInfo.standardList" placeholder="选择要使用的补损标准" style="width:400px;margin-left:10px;" filterable multiple>
+                            <el-option v-for="(item,index) in standardList" :key="'standard_'+index" :label="item.name" :value="item.id"></el-option>
+                        </el-select>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                限制时间:<el-switch v-model="configPaymentInfo.hasLimitTime" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+            </div>
+            <div v-show="configPaymentInfo.hasLimitTime" style="width:600px;margin:0 auto;text-align:left;">
+                <el-date-picker v-model="configPaymentInfo.limitTime" type="datetimerange" range-separator="至" start-placeholder="起始时间" end-placeholder="结束时间"></el-date-picker>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                限制星域:<el-switch v-model="configPaymentInfo.hasLimitArea" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+                <div v-show="configPaymentInfo.hasLimitArea" class="element-add" @click="configPaymentInfo.limitAreaList.push('')">+</div>
+            </div>
+            <div v-show="configPaymentInfo.hasLimitArea" style="width:600px;margin:0 auto;text-align:left;">
+                <div v-for="(item,index) in configPaymentInfo.limitAreaList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
+                    <el-input v-model="configPaymentInfo.limitAreaList[index]" placeholder="请输入星域名" size="mini" style="width:120px;margin-left:10px;"/>
+                    <div class="element-remove" @click="configPaymentInfo.limitAreaList.splice(index,1)">x</div>
+                </div>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                限制星座:<el-switch v-model="configPaymentInfo.hasLimitConstellation" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+                <div v-show="configPaymentInfo.hasLimitConstellation" class="element-add" @click="configPaymentInfo.limitConstellationList.push('')">+</div>
+            </div>
+            <div v-show="configPaymentInfo.hasLimitConstellation" style="width:600px;margin:0 auto;text-align:left;">
+                <div v-for="(item,index) in configPaymentInfo.limitConstellationList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
+                    <el-input v-model="configPaymentInfo.limitConstellationList[index]" placeholder="请输入星座名" size="mini" style="width:120px;margin-left:10px;"/>
+                    <div class="element-remove" @click="configPaymentInfo.limitConstellationList.splice(index,1)">x</div>
+                </div>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                限制星系:<el-switch v-model="configPaymentInfo.hasLimitGalaxy" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+                <div v-show="configPaymentInfo.hasLimitGalaxy" class="element-add" @click="configPaymentInfo.limitGalaxyList.push('')">+</div>
+            </div>
+            <div v-show="configPaymentInfo.hasLimitGalaxy" style="width:600px;margin:0 auto;text-align:left;">
+                <div v-for="(item,index) in configPaymentInfo.limitGalaxyList" :key="'area_'+index" style="display:inline-block;vertical-align:middle">
+                    <el-input v-model="configPaymentInfo.limitGalaxyList[index]" placeholder="请输入星系名" size="mini" style="width:120px;margin-left:10px;"/>
+                    <div class="element-remove" @click="configPaymentInfo.limitGalaxyList.splice(index,1)">x</div>
+                </div>
+            </div>
+        </div>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="configPaymentModal = false">取消</el-button>
+                <el-button type="primary" @click="configPayment">配置</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </div>
 </template>
 <script>
@@ -153,6 +213,22 @@ export default {
                 limitConstellationList:[''],
                 hasLimitGalaxy:false,
                 limitGalaxyList:['']
+            },
+
+            configPaymentModal:false,
+            configPaymentInfo:{
+                id:null,
+                name:'',
+                endTime:new Date(),
+                standardList:[],
+                hasLimitTime:false,
+                limitTime:[new Date(),new Date()],
+                hasLimitArea:false,
+                limitAreaList:[''],
+                hasLimitConstellation:false,
+                limitConstellationList:[''],
+                hasLimitGalaxy:false,
+                limitGalaxyList:[''] 
             }
         }
     },
@@ -236,6 +312,9 @@ export default {
                 hasLimitGalaxy:false,
                 limitGalaxyList:['']
             }
+            for(let item of this.standardList){
+                this.addPaymentInfo.standardList.push(item.id);
+            }
             this.addPaymentModal = true;
         },
 
@@ -285,6 +364,85 @@ export default {
                     this.filterAll();
                 }else{
                     ElMessage.error('新增失败');
+                }
+            })
+        },
+
+        openConfigPaymentModal(data){
+            this.$request.get("/payment/getPaymentInfo",{
+                pid:data.id
+            }).then(res=>{
+                console.log('res',res);
+                let paymentInfo = res.obj;
+
+                this.configPaymentInfo={
+                    id:paymentInfo.id,
+                    name:paymentInfo.name,
+                    endTime:new Date(paymentInfo.endTime),
+                    standardList:[],
+                    hasLimitTime:paymentInfo.lossStartTime!=null&&paymentInfo.lossEndTime!=null,
+                    limitTime:[new Date(paymentInfo.lossStartTime),new Date(paymentInfo.lossEndTime)],
+                    hasLimitArea:paymentInfo.limitArea!=null,
+                    limitAreaList:paymentInfo.limitArea==null?['']:JSON.parse(paymentInfo.limitArea),
+                    hasLimitConstellation:paymentInfo.limitConstellation!=null,
+                    limitConstellationList:paymentInfo.limitConstellation==null?['']:JSON.parse(paymentInfo.limitConstellation),
+                    hasLimitGalaxy:paymentInfo.limitGalaxy!=null,
+                    limitGalaxyList:paymentInfo.limitGalaxy==null?['']:JSON.parse(paymentInfo.limitGalaxy)
+                }
+
+                for(let item of paymentInfo.standardPaymentList){
+                    this.configPaymentInfo.standardList.push(item.id);
+                }
+
+                this.configPaymentModal = true;
+            })
+        },
+
+        configPayment(){
+            if(isEmpty(this.configPaymentInfo.name)||this.configPaymentInfo.standardList.length==0){
+                ElMessage({
+                    message: '请先补全数据',
+                    type: 'warning',
+                })
+                return;
+            }
+            //整理地区
+            let limitAreaList = [];
+            for(let item of this.configPaymentInfo.limitAreaList){
+                if(!isEmpty(item)){
+                    limitAreaList.push(item);
+                }
+            }
+            this.configPaymentInfo.limitAreaList = limitAreaList;
+
+            //整理星域
+            let limitConstellationList = [];
+            for(let item of this.configPaymentInfo.limitConstellationList){
+                if(!isEmpty(item)){
+                    limitConstellationList.push(item);
+                }
+            }
+            this.configPaymentInfo.limitConstellationList = limitConstellationList;
+
+            //整理星系
+            let limitGalaxyList = [];
+            for(let item of this.configPaymentInfo.limitGalaxyList){
+                if(!isEmpty(item)){
+                    limitGalaxyList.push(item);
+                }
+            }
+            this.configPaymentInfo.limitGalaxyList = limitGalaxyList;
+
+            this.$request.post("/payment/configPayment",this.configPaymentInfo).then(res =>{
+                if(res.obj=="success"){
+                    ElMessage({
+                        message: '配置成功',
+                        type: 'success',
+                    })
+                    this.configPaymentModal = false;
+                    this.filterAll();
+                }else{
+                    ElMessage.error('配置失败');
                 }
             })
         },
