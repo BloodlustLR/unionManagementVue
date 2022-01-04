@@ -13,12 +13,12 @@
                         <div class="payment-item" style="font-weight:bolder">允许星域- {{paymentInfo.limitConstellation}}</div>
                         <div class="payment-item" style="font-weight:bolder">允许星系- {{paymentInfo.limitGalaxy}}</div>
                         <div class="payment-item" style="font-weight:bolder">截止时间- {{paymentInfo.endTime}}</div>
-                        <div class="payment-item" style="font-weight:bolder;margin-top:20px">损失总额:  {{Math.round(armyLossTotal/100000000)}}亿星币</div>
-                        <div class="payment-item" style="font-weight:bolder">补损总额:  {{armyTotal/100000000}}亿星币</div>
+                        <div class="payment-item" style="font-weight:bolder;margin-top:20px">损失总额:  {{Math.round(armyLossTotal/100000000)}}亿星币【¥{{Math.round(armyLossTotal/100000000)*paymentInfo.rate}}】</div>
+                        <div class="payment-item" style="font-weight:bolder">补损总额:  {{armyTotal/100000000}}亿星币【¥{{armyTotal/100000000*paymentInfo.rate}}】<el-button type="primary" size="mini" @click="standardPaymentModal=true">补损标准</el-button></div>
                     </div>
                 </div>
                 <div class="detail-right">
-                    <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币,军团补损总额: {{armyTotal/100000000}}亿星币</div>
+                    <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币【¥{{Math.round(armyLossTotal/100000000)*paymentInfo.rate}}】,军团补损总额: {{armyTotal/100000000}}亿星币【¥{{armyTotal/100000000*paymentInfo.rate}}】</div>
                     <div class="army-detail">
                         <div class="detail-item" v-for="(item,index) in armyLossList" :key="'armyLoss_'+index">
                             <el-card :class="{'box-card':true,'box-card-modify':item.isModify}" style="height:220px;width:90%;margin:10px auto;text-align:left">
@@ -99,6 +99,25 @@
         </span>
         </template>
     </el-dialog>
+
+    <el-dialog v-model="standardPaymentModal" title="补损标准" width="920px">
+        <div>星币汇率:{{paymentInfo.rate}}RMB/亿</div>
+        <div style="margin-top:20px;">
+            <el-table :data="standardPaymentList" style="width: 100%">
+                <el-table-column prop="name" label="类型" width="180" />
+                <el-table-column label="补损额" width="180">
+                    <template #default="scope">
+                        {{scope.row.num/100000000}}亿【¥{{(scope.row.num/100000000*paymentInfo.rate).toFixed(2)}}】
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="standardPaymentModal = false">关闭</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </div>
 </template>
 <script>
@@ -112,6 +131,7 @@ export default {
             paymentInfo:{
                 id:null,
                 name:null,
+                rate:1,
                 endTime:null,
                 lossStartTime:null,
                 lossEndTime:null,
@@ -119,6 +139,8 @@ export default {
                 limitConstellation:[],
                 limitGalaxy:[]
             },
+            standardPaymentModal:false,
+            standardPaymentList:[],
             paymentShipList:[],
             armyLossList:[],
             armyList:[],
@@ -222,12 +244,14 @@ export default {
                 pid:this.paymentInfo.id
             }).then(res=>{
                 this.paymentInfo.name = res.obj.name;
+                this.paymentInfo.rate = res.obj.rate;
                 this.paymentInfo.endTime = res.obj.endTime;
                 this.paymentInfo.lossStartTime = res.obj.lossStartTime;
                 this.paymentInfo.lossEndTime = res.obj.lossEndTime;
                 this.paymentInfo.limitArea = JSON.parse(res.obj.limitArea);
                 this.paymentInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
                 this.paymentInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+                this.standardPaymentList = res.obj.standardPaymentList;
             })
         },
 

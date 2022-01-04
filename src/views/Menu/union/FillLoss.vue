@@ -63,6 +63,9 @@
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 截止时间:<el-date-picker v-model="addPaymentInfo.endTime" type="datetime" placeholder="请选择截止时间" style="width:200px;margin-left:10px;"></el-date-picker>
             </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                星币汇率:<el-input-number v-model="addPaymentInfo.rate" :min="0.1" :precision="1" :step="0.1" step-strictly size="small" :controls="false" style="margin-left:10px;"/>RMB/亿
+            </div>
             <div style="width:600px;margin:0 auto;text-align:left;">
                 补损标准:<el-select v-model="addPaymentInfo.standardList" placeholder="选择要使用的补损标准" style="width:400px;margin-left:10px;" filterable multiple>
                             <el-option v-for="(item,index) in standardList" :key="'standard_'+index" :label="item.name" :value="item.id"></el-option>
@@ -121,6 +124,9 @@
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 截止时间:<el-date-picker v-model="configPaymentInfo.endTime" type="datetime" placeholder="请选择截止时间" style="width:200px;margin-left:10px;"></el-date-picker>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                星币汇率:<el-input-number v-model="configPaymentInfo.rate" :min="0.1" :precision="1" :step="0.1" step-strictly size="small" :controls="false" style="margin-left:10px;"/>RMB/亿
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;">
                 补损标准:<el-select v-model="configPaymentInfo.standardList" placeholder="选择要使用的补损标准" style="width:400px;margin-left:10px;" filterable multiple>
@@ -203,6 +209,7 @@ export default {
             addPaymentModal:false,
             addPaymentInfo:{
                 name:'',
+                rate:1,
                 endTime:new Date(),
                 standardList:[],
                 hasLimitTime:false,
@@ -219,6 +226,7 @@ export default {
             configPaymentInfo:{
                 id:null,
                 name:'',
+                rate:1,
                 endTime:new Date(),
                 standardList:[],
                 hasLimitTime:false,
@@ -301,6 +309,7 @@ export default {
 
             this.addPaymentInfo={
                 name:'',
+                rate:1,
                 endTime:tomorrow,
                 standardList:[],
                 hasLimitTime:false,
@@ -377,6 +386,7 @@ export default {
 
                 this.configPaymentInfo={
                     id:paymentInfo.id,
+                    rate:Number(paymentInfo.rate),
                     name:paymentInfo.name,
                     endTime:new Date(paymentInfo.endTime),
                     standardList:[],

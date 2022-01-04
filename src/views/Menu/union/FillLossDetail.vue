@@ -5,6 +5,7 @@
             <el-radio-group v-model="displayType" size="small" @change="changeLabel">
                 <el-radio-button label="detail">详情</el-radio-button>
                 <el-radio-button label="count">统计</el-radio-button>
+                <el-radio-button label="list">列表</el-radio-button>
             </el-radio-group>
         </div>
 
@@ -20,15 +21,15 @@
                         <div class="payment-item" style="font-weight:bolder">允许星座- {{paymentInfo.limitConstellation}}</div>
                         <div class="payment-item" style="font-weight:bolder">允许星系- {{paymentInfo.limitGalaxy}}</div>
                         <div class="payment-item" style="font-weight:bolder">截止时间- {{paymentInfo.endTime}}</div>
-                        <div class="payment-item" style="font-weight:bolder;margin-top:20px">损失总额:  {{Math.round(totalLoss/100000000)}}亿星币</div>
-                        <div class="payment-item" style="font-weight:bolder">补损总额:  {{totalPrice/100000000}}亿星币</div>
+                        <div class="payment-item" style="font-weight:bolder;margin-top:20px">损失总额:  {{Math.round(totalLoss/100000000)}}亿星币【¥{{(Math.round(totalLoss/100000000)*paymentInfo.rate).toFixed(0)}}】</div>
+                        <div class="payment-item" style="font-weight:bolder">补损总额:  {{totalPrice/100000000}}亿星币【¥{{(totalPrice/100000000*paymentInfo.rate).toFixed(0)}}】<el-button type="primary" size="mini" @click="standardPaymentModal=true">补损标准</el-button></div>
                     </div>
                     <div class="army-box">
                         <el-tree :data="unionArmyList" :props="defaultProps"  @node-click="handleNodeClick"/>
                     </div>
                 </div>
                 <div class="detail-right">
-                    <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币,军团补损总额: {{armyTotal/100000000}}亿星币</div>
+                    <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币【¥{{Math.round(armyLossTotal/100000000)*paymentInfo.rate}}】,军团补损总额: {{armyTotal/100000000}}亿星币【¥{{armyTotal/100000000*paymentInfo.rate}}】</div>
                     <div class="army-detail">
                         <div class="detail-item" v-for="(item,index) in armyLossList" :key="'armyLoss_'+index">
                             <el-card :class="{'box-card':true,'box-card-modify':item.isModify}" style="height:240px;width:90%;margin:10px auto;text-align:left">
@@ -55,6 +56,27 @@
             <div class="count" v-if="displayType=='count'">
                 <div id="army_count" class="count-item"></div>
                 <div id="ship_type_count" class="count-item"></div>
+                <div id="army_payment_count" class="count-item"></div>
+                <div id="ship_type_payment_count" class="count-item"></div>
+            </div>
+            <div class="list" v-if="displayType=='list'">
+                <div class="action-board">
+                </div>
+                <div class="list-board">
+                    <el-table :data="tableData">
+                        <el-table-column prop="armyShortName" label="简称" width="100" />
+                        <el-table-column prop="armyName" label="军团全称" width="200" />
+                        <el-table-column label="金额" width="120">
+                            <template #default="scope">
+                                ¥{{scope.row.price/100000000*paymentInfo.rate}}
+                            </template>
+                        </el-table-column>
+                        <el-table-column v-for="item in standardPaymentList" :prop="item.name" :label="item.name" />
+                    </el-table>
+                </div>
+                <div class="bottom-board">
+                    <el-pagination :page-size="filter.pageSize" layout="prev, pager, next" :total="filter.pageTotal" @current-change="refreshPaymentList"></el-pagination>
+                </div>
             </div>
         </div>
     </div>
@@ -67,11 +89,31 @@
         </span>
         </template>
     </el-dialog>
+
+    <el-dialog v-model="standardPaymentModal" title="补损标准" width="920px">
+        <div>星币汇率:{{paymentInfo.rate}}RMB/亿</div>
+        <div style="margin-top:20px;">
+            <el-table :data="standardPaymentList" style="width: 100%">
+                <el-table-column prop="name" label="类型" width="180" />
+                <el-table-column label="补损额" width="180">
+                    <template #default="scope">
+                        {{scope.row.num/100000000}}亿【¥{{(scope.row.num/100000000*paymentInfo.rate).toFixed(2)}}】
+                    </template>
+                </el-table-column>
+            </el-table>
+        </div>
+        <template #footer>
+            <span class="dialog-footer">
+                <el-button @click="standardPaymentModal = false">关闭</el-button>
+            </span>
+        </template>
+    </el-dialog>
 </div>
 </template>
 <script>
 import * as echarts from 'echarts';
 import { ElMessageBox, ElMessage } from 'element-plus';
+import { reactive } from 'vue-demi';
 
 export default {
     data(){
@@ -81,6 +123,7 @@ export default {
             paymentInfo:{
                 id:null,
                 name:null,
+                rate:1,
                 endTime:null,
                 lossStartTime:null,
                 lossEndTime:null,
@@ -88,6 +131,8 @@ export default {
                 limitConstellation:[],
                 limitGalaxy:[]
             },
+            standardPaymentModal:false,
+            standardPaymentList:[],
             paymentShipList:[],
             totalLoss:0,
             totalPrice:0,
@@ -100,7 +145,14 @@ export default {
 
             armyLossList:[],
             imgModal:false,
-            imgSrc:''
+            imgSrc:'',
+
+            filter:{
+                pageNum:1,
+                pageSize:10,
+                pageTotal:0
+            },
+            tableData:reactive([])
         }
     },
     computed:{
@@ -138,6 +190,8 @@ export default {
                 this.$nextTick(()=>{
                     this.refreshAllDiagram();
                 })
+            }else if(value == "list"){
+                this.refreshPaymentList();
             }
         },
 
@@ -149,8 +203,30 @@ export default {
         },
 
         refreshAllDiagram(){
-            this.getPaymentAllArmyLoss();
-            this.getPaymentAllTypeLoss();
+            this.$nextTick(()=>{
+                this.getPaymentAllArmyLoss();
+                this.getPaymentAllTypeLoss();
+                this.getPaymentAllArmy();
+                this.getPaymentAllType();
+            })
+        },
+
+        refreshPaymentList(pageNum){
+            if(pageNum&&typeof pageNum === 'number'){
+                this.filter.pageNum = pageNum;
+            }
+            this.$request.post("/payment/getPaymentList",{
+                pid:this.paymentInfo.id,
+                pageNum:this.filter.pageNum,
+                pageSize:this.filter.pageSize,
+                pageTotal:this.filter.pageTotal
+            }).then(res => {
+                console.log("list",res.obj);
+                this.tableData = res.obj.records;
+                this.filter.pageNum = res.obj.current;
+                this.filter.pageSize = res.obj.size;
+                this.filter.pageTotal = res.obj.total;
+            })
         },
 
         getPaymentInfo(){
@@ -158,12 +234,14 @@ export default {
                 pid:this.paymentInfo.id
             }).then(res=>{
                 this.paymentInfo.name = res.obj.name;
+                this.paymentInfo.rate = res.obj.rate;
                 this.paymentInfo.endTime = res.obj.endTime;
                 this.paymentInfo.lossStartTime = res.obj.lossStartTime;
                 this.paymentInfo.lossEndTime = res.obj.lossEndTime;
                 this.paymentInfo.limitArea = JSON.parse(res.obj.limitArea);
                 this.paymentInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
                 this.paymentInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+                this.standardPaymentList = res.obj.standardPaymentList;
             })
         },
 
@@ -204,7 +282,6 @@ export default {
                     window.armyLossDiagram.dispose(); // 销毁实例
                 }
                 window.armyLossDiagram = echarts.init(document.getElementById('army_count'));// 再次创建实例
-                debugger
                 let category = [];
                 let data = [];
                 let sortData = [];
@@ -214,8 +291,7 @@ export default {
                     sortData.push(res.obj[armyName]);
                 }
                 sortData.sort();
-                let max = parseInt(sortData[0]/100000000)*100000000+1000000000;
-                debugger
+                let max = sortData.length>0?parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000:1000000000;
                 let option = {
                     backgroundColor:'#323a5e',
                         tooltip: {
@@ -345,7 +421,7 @@ export default {
                     sortData.push(res.obj[shipType]);
                 }
                 sortData.sort();
-                let max = parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000;
+                let max = sortData.length>0?parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000:1000000000;
 
                 let option = {
                     backgroundColor:'#323a5e',
@@ -454,6 +530,267 @@ export default {
                 };
                 // 绘制图表
                 shipTypeLossDiagram.setOption(option);
+            })
+        },
+
+        getPaymentAllArmy(){
+
+            this.$request.get("/loss/getPaymentAllArmy",{
+                pid:this.paymentInfo.id
+            }).then(res=>{
+                console.log("loss",res.obj);
+                if(window.armyPaymentDiagram){
+                    window.armyPaymentDiagram.dispose(); // 销毁实例
+                }
+                window.armyPaymentDiagram = echarts.init(document.getElementById('army_payment_count'));// 再次创建实例
+                let category = [];
+                let data = [];
+                let sortData = [];
+                for(let armyName in res.obj){
+                    category.push(armyName);
+                    data.push(res.obj[armyName]);
+                    sortData.push(res.obj[armyName]);
+                }
+                sortData.sort();
+                let max = sortData.length>0?parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000:1000000000;
+                let option = {
+                    backgroundColor:'#323a5e',
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: { // 坐标轴指示器，坐标轴触发有效
+                                type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+                        }
+                        },
+                        grid: {
+                            left: '2%',
+                            right: '4%',
+                            bottom: '14%',
+                            top:'16%',
+                            containLabel: true
+                        },
+                        legend: {
+                        data: ['补损额'],
+                        right: 10,
+                        top:12,
+                        textStyle: {
+                            color: "#fff"
+                        },
+                        itemWidth: 12,
+                        itemHeight: 10,
+                        // itemGap: 35
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: category,
+                        axisLine: {
+                            lineStyle: {
+                            color: 'white'
+
+                            }
+                        },
+                        axisLabel: {
+                            // interval: 0,
+                            // rotate: 40,
+                            textStyle: {
+                            fontFamily: 'Microsoft YaHei'
+                            }
+                        },
+                    },
+                    yAxis: {
+                        type: 'value',
+                        max: max.toString(),
+                        axisLine: {
+                            show: false,
+                            lineStyle: {
+                            color: 'white'
+                            }
+                        },
+                        splitLine: {
+                            show: true,
+                            lineStyle: {
+                            color: 'rgba(255,255,255,0.3)'
+                            }
+                        },
+                        axisLabel: {}
+                    },
+                    "dataZoom": [{
+                        "show": true,
+                        "height": 12,
+                        "xAxisIndex": [
+                            0
+                        ],
+                        bottom:'8%',
+                        "start": 10,
+                        "end": 90,
+                        handleIcon: 'path://M306.1,413c0,2.2-1.8,4-4,4h-59.8c-2.2,0-4-1.8-4-4V200.8c0-2.2,1.8-4,4-4h59.8c2.2,0,4,1.8,4,4V413z',
+                        handleSize: '110%',
+                        handleStyle:{
+                            color:"#d3dee5",
+
+                        },
+                        textStyle:{
+                            color:"#fff"
+                        },
+                        borderColor:"#90979c"
+                    }, {
+                        "type": "inside",
+                        "show": true,
+                        "height": 15,
+                        "start": 1,
+                        "end": 35
+                    }],
+                    series: [{
+                        name: '补损额',
+                        type: 'bar',
+                        barWidth: '15%',
+                        itemStyle: {
+                            normal: {
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                    offset: 0,
+                                    color: '#fccb05'
+                                }, {
+                                    offset: 1,
+                                    color: '#f5804d'
+                                }]),
+                                barBorderRadius: 12,
+                            },
+                        },
+                        data: data
+                    }]
+                };
+                // 绘制图表
+                armyPaymentDiagram.setOption(option);
+            })
+        },
+
+        getPaymentAllType(){
+            this.$request.get("/loss/getPaymentAllType",{
+                pid:this.paymentInfo.id
+            }).then(res=>{
+                console.log("loss",res.obj);
+                if(window.shipTypePaymentDiagram){
+                    window.shipTypePaymentDiagram.dispose(); // 销毁实例
+                }
+                window.shipTypePaymentDiagram = echarts.init(document.getElementById('ship_type_payment_count'));
+
+                let category = [];
+                let data = [];
+                let sortData = [];
+                for(let shipType in res.obj){
+                    category.push(shipType);
+                    data.push(res.obj[shipType]);
+                    sortData.push(res.obj[shipType]);
+                }
+                sortData.sort();
+                let max = sortData.length>0?parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000:1000000000;
+
+                let option = {
+                    backgroundColor:'#323a5e',
+                        tooltip: {
+                            trigger: 'axis',
+                            axisPointer: { // 坐标轴指示器，坐标轴触发有效
+                                type: 'shadow' // 默认为直线，可选为：'line' | 'shadow'
+                        }
+                        },
+                        grid: {
+                            left: '2%',
+                            right: '4%',
+                            bottom: '14%',
+                            top:'16%',
+                            containLabel: true
+                        },
+                        legend: {
+                        data: ['补损额'],
+                        right: 10,
+                        top:12,
+                        textStyle: {
+                            color: "#fff"
+                        },
+                        itemWidth: 12,
+                        itemHeight: 10,
+                        // itemGap: 35
+                    },
+                    xAxis: {
+                        type: 'category',
+                        data: category,
+                        axisLine: {
+                            lineStyle: {
+                            color: 'white'
+
+                            }
+                        },
+                        axisLabel: {
+                            // interval: 0,
+                            // rotate: 40,
+                            textStyle: {
+                            fontFamily: 'Microsoft YaHei'
+                            }
+                        },
+                    },
+                    yAxis: {
+                        type: 'value',
+                        max: max.toString(),
+                        axisLine: {
+                            show: false,
+                            lineStyle: {
+                            color: 'white'
+                            }
+                        },
+                        splitLine: {
+                            show: true,
+                            lineStyle: {
+                            color: 'rgba(255,255,255,0.3)'
+                            }
+                        },
+                        axisLabel: {}
+                    },
+                    "dataZoom": [{
+                        "show": true,
+                        "height": 12,
+                        "xAxisIndex": [
+                            0
+                        ],
+                        bottom:'8%',
+                        "start": 10,
+                        "end": 90,
+                        handleIcon: 'path://M306.1,413c0,2.2-1.8,4-4,4h-59.8c-2.2,0-4-1.8-4-4V200.8c0-2.2,1.8-4,4-4h59.8c2.2,0,4,1.8,4,4V413z',
+                        handleSize: '110%',
+                        handleStyle:{
+                            color:"#d3dee5",
+
+                        },
+                        textStyle:{
+                            color:"#fff"
+                        },
+                        borderColor:"#90979c"
+                    }, {
+                        "type": "inside",
+                        "show": true,
+                        "height": 15,
+                        "start": 1,
+                        "end": 35
+                    }],
+                    series: [{
+                        name: '补损额',
+                        type: 'bar',
+                        barWidth: '15%',
+                        itemStyle: {
+                            normal: {
+                                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
+                                    offset: 0,
+                                    color: '#8bd46e'
+                                }, {
+                                    offset: 1,
+                                    color: '#09bcb7'
+                                }]),
+                                barBorderRadius: 11,
+                            }
+                        },
+                        data: data
+                    }]
+                };
+                // 绘制图表
+                shipTypePaymentDiagram.setOption(option);
             })
         },
 
@@ -691,6 +1028,32 @@ export default {
                     background-color: rgb(38,50,56);
                     vertical-align: middle;
                     display: inline-block;
+                }
+            }
+
+            .list{
+                height:100%;
+                width:100%;
+                
+                .action-board{
+                    height:60px;
+                    line-height: 60px;
+                    margin:0 auto;
+                    
+                    >* {
+                        vertical-align: middle;
+                    }
+                }
+
+                .list-board{
+                    
+                }
+
+                .bottom-board{
+                    height:60px;
+                    line-height:60px;
+                    margin:0 auto;
+                    text-align: center;
                 }
             }
 
