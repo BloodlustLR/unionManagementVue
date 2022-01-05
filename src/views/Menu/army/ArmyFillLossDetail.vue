@@ -18,7 +18,7 @@
                     </div>
                 </div>
                 <div class="detail-right">
-                    <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币【¥{{Math.round(armyLossTotal/100000000)*paymentInfo.rate}}】,军团补损总额: {{armyTotal/100000000}}亿星币【¥{{armyTotal/100000000*paymentInfo.rate}}】</div>
+                    <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币【¥{{(Math.round(armyLossTotal/100000000)*paymentInfo.rate).toFixed(2)}}】,军团补损总额: {{armyTotal/100000000}}亿星币【¥{{(armyTotal/100000000*paymentInfo.rate).toFixed(2)}}】</div>
                     <div class="army-detail">
                         <div class="detail-item" v-for="(item,index) in armyLossList" :key="'armyLoss_'+index">
                             <el-card :class="{'box-card':true,'box-card-modify':item.isModify}" style="height:220px;width:90%;margin:10px auto;text-align:left">
