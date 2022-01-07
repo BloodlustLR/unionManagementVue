@@ -179,9 +179,9 @@ export default {
                 endTime:null,
                 lossStartTime:null,
                 lossEndTime:null,
-                limitArea:[],
-                limitConstellation:[],
-                limitGalaxy:[]
+                limitArea:null,
+                limitConstellation:null,
+                limitGalaxy:null
             },
             hasOutOfDate:true,
             uploadUrl:'/api/ocr/detectPic',
@@ -281,9 +281,9 @@ export default {
                 this.paymentInfo.endTime = res.obj.endTime;
                 this.paymentInfo.lossStartTime = res.obj.lossStartTime;
                 this.paymentInfo.lossEndTime = res.obj.lossEndTime;
-                this.paymentInfo.limitArea = JSON.parse(res.obj.limitArea);
-                this.paymentInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
-                this.paymentInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+                this.paymentInfo.limitArea = res.obj.limitArea==null?null:JSON.parse(res.obj.limitArea);
+                this.paymentInfo.limitConstellation = res.obj.limitConstellation==null?null:JSON.parse(res.obj.limitConstellation);
+                this.paymentInfo.limitGalaxy = res.obj.limitGalaxy==null?null:JSON.parse(res.obj.limitGalaxy);
 
                 this.hasOutOfDate = new Date().getTime()>new Date(this.paymentInfo.endTime).getTime();
 
@@ -420,44 +420,32 @@ export default {
                 }
             }
 
-            if(!isEmpty(this.paymentInfo.limitArea)){
-                if(!isEmpty(value.area)){
-                    if(this.paymentInfo.limitArea.indexOf(value.area)==-1){
-                        // ElMessage.error('星域不合规');
-                        // return false;
-                        return '星域不合规';
+            let isInclude = false;
+            if(this.paymentInfo.limitArea!=null||this.paymentInfo.limitConstellation!=null||this.paymentInfo.limitGalaxy!=null){
+                
+                if(this.paymentInfo.limitArea!=null&&!isEmpty(value.area)){
+                    if(this.paymentInfo.limitArea.indexOf(value.area)!=-1){
+                        isInclude = true;
                     }
-                }else{
-                    // ElMessage.error('识别结果缺失星域，请换一张图试试');
-                    // return false;
-                    return '识别结果缺失星域';
                 }
+                if(this.paymentInfo.limitConstellation!=null&&!isEmpty(value.constellation)){
+                    if(this.paymentInfo.limitConstellation.indexOf(value.constellation)!=-1){
+                        isInclude = true;
+                    }
+                }
+                if(this.paymentInfo.limitGalaxy!=null&&!isEmpty(value.galaxy)){
+                    if(this.paymentInfo.limitGalaxy.indexOf(value.galaxy)!=-1){
+                        isInclude = true;
+                    }
+                }
+            }else{
+                isInclude = true;
             }
 
-            // if(!isEmpty(this.paymentInfo.constellation)){
-            //     if(!isEmpty(value.constellation)){
-            //         if(this.paymentInfo.limitConstellation.indexOf(value.constellation)==-1){
-            //             ElMessage.error('星域不合规');
-            //             return;
-            //         }
-            //     }else{
-            //         ElMessage.error('识别结果缺失星域，请换一张图试试');
-            //         return;
-            //     }
-            // }
+            if(!isInclude){
+                return "地点不合规";
+            }
 
-
-            // if(!isEmpty(this.paymentInfo.limitGalaxy)){
-            //     if(!isEmpty(value.galaxy)){
-            //         if(this.paymentInfo.limitGalaxy.indexOf(value.galaxy)==-1){
-            //             ElMessage.error('星系不合规');
-            //             return;
-            //         }
-            //     }else{
-            //         ElMessage.error('识别结果缺失星系，请换一张图试试');
-            //         return;
-            //     }
-            // }
             return null;
         },
 

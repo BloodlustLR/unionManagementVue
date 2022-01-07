@@ -401,45 +401,32 @@ export default {
                 }
             }
 
-            if(!isEmpty(this.killReportInfo.limitArea)){
-                if(!isEmpty(value.area)){
-                    if(this.killReportInfo.limitArea.indexOf(value.area)==-1){
-                        // ElMessage.error('星域不合规');
-                        // return false;
-                        return '星域不合规';
+            let isInclude = false;
+            if(this.killReportInfo.limitArea!=null||this.killReportInfo.limitConstellation!=null||this.killReportInfo.limitGalaxy!=null){
+                
+                if(this.killReportInfo.limitArea!=null&&!isEmpty(value.area)){
+                    if(this.killReportInfo.limitArea.indexOf(value.area)!=-1){
+                        isInclude = true;
                     }
-                }else{
-                    // ElMessage.error('识别结果缺失星域，请换一张图试试');
-                    // return false;
-                    return '识别结果缺失星域';
                 }
+                if(this.killReportInfo.limitConstellation!=null&&!isEmpty(value.constellation)){
+                    if(this.killReportInfo.limitConstellation.indexOf(value.constellation)!=-1){
+                        isInclude = true;
+                    }
+                }
+                if(this.killReportInfo.limitGalaxy!=null&&!isEmpty(value.galaxy)){
+                    if(this.killReportInfo.limitGalaxy.indexOf(value.galaxy)!=-1){
+                        isInclude = true;
+                    }
+                }
+            }else{
+                isInclude = true;
             }
 
-            // if(!isEmpty(this.killReportInfo.constellation)){
-            //     if(!isEmpty(value.constellation)){
-            //         if(this.killReportInfo.limitConstellation.indexOf(value.constellation)==-1){
-            //             ElMessage.error('星域不合规');
-            //             return;
-            //         }
-            //     }else{
-            //         ElMessage.error('识别结果缺失星域，请换一张图试试');
-            //         return;
-            //     }
-            // }
+            if(!isInclude){
+                return "地点不合规";
+            }
 
-
-            // if(!isEmpty(this.killReportInfo.limitGalaxy)){
-            //     if(!isEmpty(value.galaxy)){
-            //         if(this.killReportInfo.limitGalaxy.indexOf(value.galaxy)==-1){
-            //             ElMessage.error('星系不合规');
-            //             return;
-            //         }
-            //     }else{
-            //         ElMessage.error('识别结果缺失星系，请换一张图试试');
-            //         return;
-            //     }
-            // }
-            // return true;
             return null;
         },
 
