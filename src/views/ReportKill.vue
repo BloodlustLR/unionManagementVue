@@ -72,9 +72,9 @@
             <div class="killReport-item">击杀统计编号-{{killReportInfo.id}}</div>
             <div class="killReport-item">击杀统计名-{{killReportInfo.name}}</div>
             <div class="killReport-item">允许时间段-{{killReportInfo.killStartTime}}<span v-show="killReportInfo.killStartTime!=null&&killReportInfo.killEndTime!=null">至</span>{{killReportInfo.killEndTime}}</div>
-            <div class="killReport-item">允许星域-{{killReportInfo.limitArea}}</div>
-            <div class="killReport-item">允许星座-{{killReportInfo.limitConstellation}}</div>
-            <div class="killReport-item">允许星系-{{killReportInfo.limitGalaxy}}</div>
+            <div class="killReport-item">允许星域-{{killReportInfo.limitArea==null?'无限制':killReportInfo.limitArea}}</div>
+            <div class="killReport-item">允许星座-{{killReportInfo.limitConstellation==null?'无限制':killReportInfo.limitConstellation}}</div>
+            <div class="killReport-item">允许星系-{{killReportInfo.limitGalaxy==null?'无限制':killReportInfo.limitGalaxy}}</div>
             <div class="killReport-item">截止时间-{{killReportInfo.endTime}}</div>
         </div>
         <template #footer>
@@ -171,12 +171,12 @@ export default {
                 endTime:null,
                 killStartTime:null,
                 killEndTime:null,
-                limitArea:[],
-                limitConstellation:[],
-                limitGalaxy:[]
+                limitArea:null,
+                limitConstellation:null,
+                limitGalaxy:null
             },
             hasOutOfDate:true,
-            uploadUrl:'/api/ocr/detectPic',
+            uploadUrl:'/api/ocr/detectKillPic',
             detectResultList:[],
             loadingList:reactive({}),
 
@@ -267,9 +267,9 @@ export default {
                 this.killReportInfo.endTime = res.obj.endTime;
                 this.killReportInfo.killStartTime = res.obj.killStartTime;
                 this.killReportInfo.killEndTime = res.obj.killEndTime;
-                this.killReportInfo.limitArea = JSON.parse(res.obj.limitArea);
-                this.killReportInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
-                this.killReportInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+                this.killReportInfo.limitArea = res.obj.limitArea==null?null:JSON.parse(res.obj.limitArea);
+                this.killReportInfo.limitConstellation = res.obj.limitConstellation==null?null:JSON.parse(res.obj.limitConstellation);
+                this.killReportInfo.limitGalaxy = res.obj.limitGalaxy==null?null:JSON.parse(res.obj.limitGalaxy);
 
                 this.hasOutOfDate = new Date().getTime()>new Date(this.killReportInfo.endTime).getTime();
 
@@ -401,31 +401,31 @@ export default {
                 }
             }
 
-            let isInclude = false;
-            if(this.killReportInfo.limitArea!=null||this.killReportInfo.limitConstellation!=null||this.killReportInfo.limitGalaxy!=null){
+            // let isInclude = false;
+            // if(this.killReportInfo.limitArea!=null||this.killReportInfo.limitConstellation!=null||this.killReportInfo.limitGalaxy!=null){
                 
-                if(this.killReportInfo.limitArea!=null&&!isEmpty(value.area)){
-                    if(this.killReportInfo.limitArea.indexOf(value.area)!=-1){
-                        isInclude = true;
-                    }
-                }
-                if(this.killReportInfo.limitConstellation!=null&&!isEmpty(value.constellation)){
-                    if(this.killReportInfo.limitConstellation.indexOf(value.constellation)!=-1){
-                        isInclude = true;
-                    }
-                }
-                if(this.killReportInfo.limitGalaxy!=null&&!isEmpty(value.galaxy)){
-                    if(this.killReportInfo.limitGalaxy.indexOf(value.galaxy)!=-1){
-                        isInclude = true;
-                    }
-                }
-            }else{
-                isInclude = true;
-            }
+            //     if(this.killReportInfo.limitArea!=null&&!isEmpty(value.area)){
+            //         if(this.killReportInfo.limitArea.indexOf(value.area)!=-1){
+            //             isInclude = true;
+            //         }
+            //     }
+            //     if(this.killReportInfo.limitConstellation!=null&&!isEmpty(value.constellation)){
+            //         if(this.killReportInfo.limitConstellation.indexOf(value.constellation)!=-1){
+            //             isInclude = true;
+            //         }
+            //     }
+            //     if(this.killReportInfo.limitGalaxy!=null&&!isEmpty(value.galaxy)){
+            //         if(this.killReportInfo.limitGalaxy.indexOf(value.galaxy)!=-1){
+            //             isInclude = true;
+            //         }
+            //     }
+            // }else{
+            //     isInclude = true;
+            // }
 
-            if(!isInclude){
-                return "地点不合规";
-            }
+            // if(!isInclude){
+            //     return "地点不合规";
+            // }
 
             return null;
         },
