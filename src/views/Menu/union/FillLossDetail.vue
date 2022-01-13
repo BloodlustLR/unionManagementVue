@@ -1045,10 +1045,6 @@ export default {
                     }
                 }
 
-                .list-board{
-                    
-                }
-
                 .bottom-board{
                     height:60px;
                     line-height:60px;
