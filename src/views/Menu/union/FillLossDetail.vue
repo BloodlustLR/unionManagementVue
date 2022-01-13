@@ -17,12 +17,12 @@
                         <div class="payment-item" style="font-weight:bolder">补损名- {{paymentInfo.name}}</div>
                         <div class="payment-item" style="font-weight:bolder">起始时间- {{paymentInfo.lossStartTime}}</div>
                         <div class="payment-item" style="font-weight:bolder">结束时间- {{paymentInfo.lossEndTime}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许星域- {{paymentInfo.limitArea}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许星座- {{paymentInfo.limitConstellation}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许星系- {{paymentInfo.limitGalaxy}}</div>
+                        <div class="payment-item" style="font-weight:bolder">允许星域- {{paymentInfo.limitArea==null?'无限制':paymentInfo.limitArea}}</div>
+                        <div class="payment-item" style="font-weight:bolder">允许星座- {{paymentInfo.limitConstellation==null?'无限制':paymentInfo.limitConstellation}}</div>
+                        <div class="payment-item" style="font-weight:bolder">允许星系- {{paymentInfo.limitGalaxy==null?'无限制':paymentInfo.limitGalaxy}}</div>
                         <div class="payment-item" style="font-weight:bolder">截止时间- {{paymentInfo.endTime}}</div>
-                        <div class="payment-item" style="font-weight:bolder;margin-top:20px">损失总额:  {{Math.round(totalLoss/100000000)}}亿星币【¥{{(Math.round(totalLoss/100000000)*paymentInfo.rate).toFixed(0)}}】</div>
-                        <div class="payment-item" style="font-weight:bolder">补损总额:  {{totalPrice/100000000}}亿星币【¥{{(totalPrice/100000000*paymentInfo.rate).toFixed(0)}}】<el-button type="primary" size="mini" @click="standardPaymentModal=true">补损标准</el-button></div>
+                        <div class="payment-item" style="font-weight:bolder;margin-top:20px">损失总额:  {{Math.round(totalLoss/100000000)}}亿星币【¥{{(Math.round(totalLoss/100000000)*paymentInfo.rate).toFixed(2)}}】</div>
+                        <div class="payment-item" style="font-weight:bolder">补损总额:  {{totalPrice/100000000}}亿星币【¥{{(totalPrice*paymentInfo.rate/100000000).toFixed(2)}}】<el-button type="primary" size="mini" @click="standardPaymentModal=true">补损标准</el-button></div>
                     </div>
                     <div class="army-box">
                         <el-tree :data="unionArmyList" :props="defaultProps"  @node-click="handleNodeClick"/>
@@ -68,10 +68,10 @@
                         <el-table-column prop="armyName" label="军团全称" width="200" />
                         <el-table-column label="金额" width="120">
                             <template #default="scope">
-                                ¥{{scope.row.price/100000000*paymentInfo.rate}}
+                                ¥{{(scope.row.price/100000000*paymentInfo.rate).toFixed(2)}}
                             </template>
                         </el-table-column>
-                        <el-table-column v-for="item in standardPaymentList" :prop="item.name" :label="item.name" />
+                        <el-table-column v-for="item in standardPaymentList" :prop="item.name" :label="item.name" :key="item.name"/>
                     </el-table>
                 </div>
                 <div class="bottom-board">
@@ -127,9 +127,9 @@ export default {
                 endTime:null,
                 lossStartTime:null,
                 lossEndTime:null,
-                limitArea:[],
-                limitConstellation:[],
-                limitGalaxy:[]
+                limitArea:null,
+                limitConstellation:null,
+                limitGalaxy:null
             },
             standardPaymentModal:false,
             standardPaymentList:[],
@@ -238,9 +238,9 @@ export default {
                 this.paymentInfo.endTime = res.obj.endTime;
                 this.paymentInfo.lossStartTime = res.obj.lossStartTime;
                 this.paymentInfo.lossEndTime = res.obj.lossEndTime;
-                this.paymentInfo.limitArea = JSON.parse(res.obj.limitArea);
-                this.paymentInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
-                this.paymentInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+                this.paymentInfo.limitArea = res.obj.limitArea==null?null:JSON.parse(res.obj.limitArea);
+                this.paymentInfo.limitConstellation = res.obj.limitConstellation==null?null:JSON.parse(res.obj.limitConstellation);
+                this.paymentInfo.limitGalaxy = res.obj.limitGalaxy==null?null:JSON.parse(res.obj.limitGalaxy);
                 this.standardPaymentList = res.obj.standardPaymentList;
             })
         },
@@ -284,14 +284,14 @@ export default {
                 window.armyLossDiagram = echarts.init(document.getElementById('army_count'));// 再次创建实例
                 let category = [];
                 let data = [];
-                let sortData = [];
+                let max = 1000000000;
                 for(let armyName in res.obj){
                     category.push(armyName);
                     data.push(res.obj[armyName]);
-                    sortData.push(res.obj[armyName]);
+                    
+                    let newTemp = res.obj[armyName]/100000000*100000000+1000000000;
+                    max = newTemp>max?newTemp:max;
                 }
-                sortData.sort();
-                let max = sortData.length>0?parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000:1000000000;
                 let option = {
                     backgroundColor:'#323a5e',
                         tooltip: {
@@ -414,14 +414,14 @@ export default {
 
                 let category = [];
                 let data = [];
-                let sortData = [];
+                let max = 1000000000;
                 for(let shipType in res.obj){
                     category.push(shipType);
                     data.push(res.obj[shipType]);
-                    sortData.push(res.obj[shipType]);
+
+                    let newTemp = res.obj[shipType]/100000000*100000000+1000000000;
+                    max = newTemp>max?newTemp:max;
                 }
-                sortData.sort();
-                let max = sortData.length>0?parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000:1000000000;
 
                 let option = {
                     backgroundColor:'#323a5e',
@@ -545,14 +545,14 @@ export default {
                 window.armyPaymentDiagram = echarts.init(document.getElementById('army_payment_count'));// 再次创建实例
                 let category = [];
                 let data = [];
-                let sortData = [];
+                let max = 1000000000;
                 for(let armyName in res.obj){
                     category.push(armyName);
                     data.push(res.obj[armyName]);
-                    sortData.push(res.obj[armyName]);
+
+                    let newTemp = res.obj[armyName]/100000000*100000000+1000000000;
+                    max = newTemp>max?newTemp:max;
                 }
-                sortData.sort();
-                let max = sortData.length>0?parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000:1000000000;
                 let option = {
                     backgroundColor:'#323a5e',
                         tooltip: {
@@ -675,14 +675,14 @@ export default {
 
                 let category = [];
                 let data = [];
-                let sortData = [];
+                let max = 1000000000;
                 for(let shipType in res.obj){
                     category.push(shipType);
                     data.push(res.obj[shipType]);
-                    sortData.push(res.obj[shipType]);
+
+                    let newTemp = res.obj[shipType]/100000000*100000000+1000000000;
+                    max = newTemp>max?newTemp:max;
                 }
-                sortData.sort();
-                let max = sortData.length>0?parseInt(sortData[sortData.length-1]/100000000)*100000000+1000000000:1000000000;
 
                 let option = {
                     backgroundColor:'#323a5e',
@@ -1043,10 +1043,6 @@ export default {
                     >* {
                         vertical-align: middle;
                     }
-                }
-
-                .list-board{
-                    
                 }
 
                 .bottom-board{

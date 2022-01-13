@@ -9,16 +9,16 @@
                         <div class="payment-item" style="font-weight:bolder">补损名- {{paymentInfo.name}}</div>
                         <div class="payment-item" style="font-weight:bolder">起始时间- {{paymentInfo.lossStartTime}}</div>
                         <div class="payment-item" style="font-weight:bolder">结束时间- {{paymentInfo.lossEndTime}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许地区- {{paymentInfo.limitArea}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许星域- {{paymentInfo.limitConstellation}}</div>
-                        <div class="payment-item" style="font-weight:bolder">允许星系- {{paymentInfo.limitGalaxy}}</div>
+                        <div class="payment-item" style="font-weight:bolder">允许星域- {{paymentInfo.limitArea==null?'无限制':paymentInfo.limitArea}}</div>
+                        <div class="payment-item" style="font-weight:bolder">允许星座- {{paymentInfo.limitConstellation==null?'无限制':paymentInfo.limitConstellation}}</div>
+                        <div class="payment-item" style="font-weight:bolder">允许星系- {{paymentInfo.limitGalaxy==null?'无限制':paymentInfo.limitGalaxy}}</div>
                         <div class="payment-item" style="font-weight:bolder">截止时间- {{paymentInfo.endTime}}</div>
                         <div class="payment-item" style="font-weight:bolder;margin-top:20px">损失总额:  {{Math.round(armyLossTotal/100000000)}}亿星币【¥{{Math.round(armyLossTotal/100000000)*paymentInfo.rate}}】</div>
                         <div class="payment-item" style="font-weight:bolder">补损总额:  {{armyTotal/100000000}}亿星币【¥{{armyTotal/100000000*paymentInfo.rate}}】<el-button type="primary" size="mini" @click="standardPaymentModal=true">补损标准</el-button></div>
                     </div>
                 </div>
                 <div class="detail-right">
-                    <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币【¥{{Math.round(armyLossTotal/100000000)*paymentInfo.rate}}】,军团补损总额: {{armyTotal/100000000}}亿星币【¥{{armyTotal/100000000*paymentInfo.rate}}】</div>
+                    <div class="army-info">军团损失共计:{{Math.round(armyLossTotal/100000000)}}亿星币【¥{{(Math.round(armyLossTotal/100000000)*paymentInfo.rate).toFixed(2)}}】,军团补损总额: {{armyTotal/100000000}}亿星币【¥{{(armyTotal/100000000*paymentInfo.rate).toFixed(2)}}】</div>
                     <div class="army-detail">
                         <div class="detail-item" v-for="(item,index) in armyLossList" :key="'armyLoss_'+index">
                             <el-card :class="{'box-card':true,'box-card-modify':item.isModify}" style="height:220px;width:90%;margin:10px auto;text-align:left">
@@ -135,9 +135,9 @@ export default {
                 endTime:null,
                 lossStartTime:null,
                 lossEndTime:null,
-                limitArea:[],
-                limitConstellation:[],
-                limitGalaxy:[]
+                limitArea:null,
+                limitConstellation:null,
+                limitGalaxy:null
             },
             standardPaymentModal:false,
             standardPaymentList:[],
@@ -248,9 +248,9 @@ export default {
                 this.paymentInfo.endTime = res.obj.endTime;
                 this.paymentInfo.lossStartTime = res.obj.lossStartTime;
                 this.paymentInfo.lossEndTime = res.obj.lossEndTime;
-                this.paymentInfo.limitArea = JSON.parse(res.obj.limitArea);
-                this.paymentInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
-                this.paymentInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+                this.paymentInfo.limitArea = res.obj.limitArea==null?null:JSON.parse(res.obj.limitArea);
+                this.paymentInfo.limitConstellation = res.obj.limitConstellation==null?null:JSON.parse(res.obj.limitConstellation);
+                this.paymentInfo.limitGalaxy = res.obj.limitGalaxy==null?null:JSON.parse(res.obj.limitGalaxy);
                 this.standardPaymentList = res.obj.standardPaymentList;
             })
         },

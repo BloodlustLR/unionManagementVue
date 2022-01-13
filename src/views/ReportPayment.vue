@@ -73,9 +73,9 @@
             <div class="payment-item">补损编号-{{paymentInfo.id}}</div>
             <div class="payment-item">补损名-{{paymentInfo.name}}</div>
             <div class="payment-item">允许时间段-{{paymentInfo.lossStartTime}}<span v-show="paymentInfo.lossStartTime!=null&&paymentInfo.lossEndTime!=null">至</span>{{paymentInfo.lossEndTime}}</div>
-            <div class="payment-item">允许星域-{{paymentInfo.limitArea}}</div>
-            <div class="payment-item">允许星座-{{paymentInfo.limitConstellation}}</div>
-            <div class="payment-item">允许星系-{{paymentInfo.limitGalaxy}}</div>
+            <div class="payment-item">允许星域-{{paymentInfo.limitArea==null?'无限制':paymentInfo.limitArea}}</div>
+            <div class="payment-item">允许星座-{{paymentInfo.limitConstellation==null?'无限制':paymentInfo.limitConstellation}}</div>
+            <div class="payment-item">允许星系-{{paymentInfo.limitGalaxy==null?'无限制':paymentInfo.limitGalaxy}}</div>
             <div class="payment-item">截止时间-{{paymentInfo.endTime}}</div>
         </div>
         <template #footer>
@@ -109,19 +109,34 @@
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">星域</span>
-                <el-input v-model="lossInfo.area" placeholder="请输入星域" style="width:220px" disabled/>
+                <!-- <el-input v-model="lossInfo.area" placeholder="请输入星域" style="width:220px" disabled/> -->
+                <el-select v-model="lossInfo.area" filterable allow-create default-first-option placeholder="请输入星域" style="width:220px" disabled>
+                    <template v-if="paymentInfo.limitArea!=null">
+                        <el-option v-for="item in paymentInfo.limitArea" :key="item" :label="item" :value="item"></el-option>
+                    </template>
+                </el-select>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">星座</span>
-                <el-input v-model="lossInfo.constellation" placeholder="请输入星座" style="width:220px"/>
+                <!-- <el-input v-model="lossInfo.constellation" placeholder="请输入星座" style="width:220px"/> -->
+                <el-select v-model="lossInfo.constellation" filterable allow-create default-first-option placeholder="请输入星座" style="width:220px">
+                    <template v-if="paymentInfo.limitConstellation!=null">
+                        <el-option v-for="item in paymentInfo.limitConstellation" :key="item" :label="item" :value="item"></el-option>
+                    </template>
+                </el-select>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">星系</span>
-                <el-input v-model="lossInfo.galaxy" placeholder="请输入星系" style="width:220px"/>
+                <!-- <el-input v-model="lossInfo.galaxy" placeholder="请输入星系" style="width:220px"/> -->
+                <el-select v-model="lossInfo.galaxy" filterable allow-create default-first-option placeholder="请输入星系" style="width:220px">
+                    <template v-if="paymentInfo.limitGalaxy!=null">
+                        <el-option v-for="item in paymentInfo.limitGalaxy" :key="item" :label="item" :value="item"></el-option>
+                    </template>
+                </el-select>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">金额</span>
-                <el-input-number v-model="lossInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px" :disabled="killInfo.money!=''&&killInfo.money!=null"/>
+                <el-input-number v-model="lossInfo.money" :min="0" :step="1" :precision="0" step-strictly style="width:220px" :disabled="lossInfo.money!=''&&lossInfo.money!=null"/>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">最后一击</span>
@@ -179,12 +194,12 @@ export default {
                 endTime:null,
                 lossStartTime:null,
                 lossEndTime:null,
-                limitArea:[],
-                limitConstellation:[],
-                limitGalaxy:[]
+                limitArea:null,
+                limitConstellation:null,
+                limitGalaxy:null
             },
             hasOutOfDate:true,
-            uploadUrl:'/api/ocr/detectPic',
+            uploadUrl:'/api/ocr/detectLossPic',
             detectResultList:[],
             loadingList:reactive({}),
 
@@ -281,9 +296,9 @@ export default {
                 this.paymentInfo.endTime = res.obj.endTime;
                 this.paymentInfo.lossStartTime = res.obj.lossStartTime;
                 this.paymentInfo.lossEndTime = res.obj.lossEndTime;
-                this.paymentInfo.limitArea = JSON.parse(res.obj.limitArea);
-                this.paymentInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
-                this.paymentInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+                this.paymentInfo.limitArea = res.obj.limitArea==null?null:JSON.parse(res.obj.limitArea);
+                this.paymentInfo.limitConstellation = res.obj.limitConstellation==null?null:JSON.parse(res.obj.limitConstellation);
+                this.paymentInfo.limitGalaxy = res.obj.limitGalaxy==null?null:JSON.parse(res.obj.limitGalaxy);
 
                 this.hasOutOfDate = new Date().getTime()>new Date(this.paymentInfo.endTime).getTime();
 
@@ -420,44 +435,32 @@ export default {
                 }
             }
 
-            if(!isEmpty(this.paymentInfo.limitArea)){
-                if(!isEmpty(value.area)){
-                    if(this.paymentInfo.limitArea.indexOf(value.area)==-1){
-                        // ElMessage.error('星域不合规');
-                        // return false;
-                        return '星域不合规';
-                    }
-                }else{
-                    // ElMessage.error('识别结果缺失星域，请换一张图试试');
-                    // return false;
-                    return '识别结果缺失星域';
-                }
-            }
-
-            // if(!isEmpty(this.paymentInfo.constellation)){
-            //     if(!isEmpty(value.constellation)){
-            //         if(this.paymentInfo.limitConstellation.indexOf(value.constellation)==-1){
-            //             ElMessage.error('星域不合规');
-            //             return;
+            // let isInclude = false;
+            // if(this.paymentInfo.limitArea!=null||this.paymentInfo.limitConstellation!=null||this.paymentInfo.limitGalaxy!=null){
+                
+            //     if(this.paymentInfo.limitArea!=null&&!isEmpty(value.area)){
+            //         if(this.paymentInfo.limitArea.indexOf(value.area)!=-1){
+            //             isInclude = true;
             //         }
-            //     }else{
-            //         ElMessage.error('识别结果缺失星域，请换一张图试试');
-            //         return;
             //     }
+            //     if(this.paymentInfo.limitConstellation!=null&&!isEmpty(value.constellation)){
+            //         if(this.paymentInfo.limitConstellation.indexOf(value.constellation)!=-1){
+            //             isInclude = true;
+            //         }
+            //     }
+            //     if(this.paymentInfo.limitGalaxy!=null&&!isEmpty(value.galaxy)){
+            //         if(this.paymentInfo.limitGalaxy.indexOf(value.galaxy)!=-1){
+            //             isInclude = true;
+            //         }
+            //     }
+            // }else{
+            //     isInclude = true;
             // }
 
-
-            // if(!isEmpty(this.paymentInfo.limitGalaxy)){
-            //     if(!isEmpty(value.galaxy)){
-            //         if(this.paymentInfo.limitGalaxy.indexOf(value.galaxy)==-1){
-            //             ElMessage.error('星系不合规');
-            //             return;
-            //         }
-            //     }else{
-            //         ElMessage.error('识别结果缺失星系，请换一张图试试');
-            //         return;
-            //     }
+            // if(!isInclude){
+            //     return "地点不合规";
             // }
+
             return null;
         },
 

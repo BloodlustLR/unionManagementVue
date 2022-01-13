@@ -9,9 +9,9 @@
                         <div class="killReport-item" style="font-weight:bolder">补损名- {{killReportInfo.name}}</div>
                         <div class="killReport-item" style="font-weight:bolder">起始时间- {{killReportInfo.killStartTime}}</div>
                         <div class="killReport-item" style="font-weight:bolder">结束时间- {{killReportInfo.killEndTime}}</div>
-                        <div class="killReport-item" style="font-weight:bolder">允许星域- {{killReportInfo.limitArea}}</div>
-                        <div class="killReport-item" style="font-weight:bolder">允许星座- {{killReportInfo.limitConstellation}}</div>
-                        <div class="killReport-item" style="font-weight:bolder">允许星系- {{killReportInfo.limitGalaxy}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">允许星域- {{killReportInfo.limitArea==null?'无限制':killReportInfo.limitArea}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">允许星座- {{killReportInfo.limitConstellation==null?'无限制':killReportInfo.limitConstellation}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">允许星系- {{killReportInfo.limitGalaxy==null?'无限制':killReportInfo.limitGalaxy}}</div>
                         <div class="killReport-item" style="font-weight:bolder">截止时间- {{killReportInfo.endTime}}</div>
                         <div class="killReport-item" style="font-weight:bolder;margin-top:20px">击杀总额:  {{Math.round(armyTotal/100000000)}}亿星币</div>
                     </div>
@@ -71,9 +71,9 @@ export default {
                 endTime:null,
                 killStartTime:null,
                 killEndTime:null,
-                limitArea:[],
-                limitConstellation:[],
-                limitGalaxy:[]
+                limitArea:null,
+                limitConstellation:null,
+                limitGalaxy:null
             },
             totalKill:0,
 
@@ -159,9 +159,9 @@ export default {
                 this.killReportInfo.endTime = res.obj.endTime;
                 this.killReportInfo.killStartTime = res.obj.killStartTime;
                 this.killReportInfo.killEndTime = res.obj.killEndTime;
-                this.killReportInfo.limitArea = JSON.parse(res.obj.limitArea);
-                this.killReportInfo.limitConstellation = JSON.parse(res.obj.limitConstellation);
-                this.killReportInfo.limitGalaxy = JSON.parse(res.obj.limitGalaxy);
+                this.killReportInfo.limitArea = res.obj.limitArea==null?null:JSON.parse(res.obj.limitArea);
+                this.killReportInfo.limitConstellation = res.obj.limitConstellation==null?null:JSON.parse(res.obj.limitConstellation);
+                this.killReportInfo.limitGalaxy = res.obj.limitGalaxy==null?null:JSON.parse(res.obj.limitGalaxy);
             })
         },
 
