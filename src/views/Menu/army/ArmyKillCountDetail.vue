@@ -7,8 +7,11 @@
                     <div class="killReport-box">
                         <div class="killReport-item" style="font-weight:bolder">补损编号- {{killReportInfo.id}}</div>
                         <div class="killReport-item" style="font-weight:bolder">补损名- {{killReportInfo.name}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">是否需要详细报告- {{killReportInfo.needDetail?'是':'否'}}</div>
                         <div class="killReport-item" style="font-weight:bolder">起始时间- {{killReportInfo.killStartTime}}</div>
                         <div class="killReport-item" style="font-weight:bolder">结束时间- {{killReportInfo.killEndTime}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">目标联盟- {{killReportInfo.targetUnion==null?'无限制':killReportInfo.targetUnion}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">目标军团- {{killReportInfo.targetArmy==null?'无限制':killReportInfo.targetArmy}}</div>
                         <div class="killReport-item" style="font-weight:bolder">允许星域- {{killReportInfo.limitArea==null?'无限制':killReportInfo.limitArea}}</div>
                         <div class="killReport-item" style="font-weight:bolder">允许星座- {{killReportInfo.limitConstellation==null?'无限制':killReportInfo.limitConstellation}}</div>
                         <div class="killReport-item" style="font-weight:bolder">允许星系- {{killReportInfo.limitGalaxy==null?'无限制':killReportInfo.limitGalaxy}}</div>
@@ -157,8 +160,11 @@ export default {
             }).then(res=>{
                 this.killReportInfo.name = res.obj.name;
                 this.killReportInfo.endTime = res.obj.endTime;
+                this.killReportInfo.needDetail = res.obj.needDetail;
                 this.killReportInfo.killStartTime = res.obj.killStartTime;
                 this.killReportInfo.killEndTime = res.obj.killEndTime;
+                this.killReportInfo.targetUnion = res.obj.targetUnion==null?null:JSON.parse(res.obj.targetUnion);
+                this.killReportInfo.targetArmy = res.obj.targetArmy==null?null:JSON.parse(res.obj.targetArmy);
                 this.killReportInfo.limitArea = res.obj.limitArea==null?null:JSON.parse(res.obj.limitArea);
                 this.killReportInfo.limitConstellation = res.obj.limitConstellation==null?null:JSON.parse(res.obj.limitConstellation);
                 this.killReportInfo.limitGalaxy = res.obj.limitGalaxy==null?null:JSON.parse(res.obj.limitGalaxy);

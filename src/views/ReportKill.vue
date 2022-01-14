@@ -25,6 +25,7 @@
                 <div class="report-item">军团缩写: {{detectResult.kmArmyShortName}}</div>
                 <div class="report-item">最后一击: {{detectResult.kmGameId}}</div>
                 <div class="report-item">击杀船型: {{detectResult.shipName}}</div>
+                <div class="report-item">被击杀军团: {{detectResult.armyShortName}}</div>
                 <div class="report-item">星域: {{detectResult.area}}</div>
                 <div class="report-item">星座: {{detectResult.constellation}}</div>
                 <div class="report-item">星系: {{detectResult.galaxy}}</div>
@@ -71,7 +72,10 @@
         <div class="killReport-box">
             <div class="killReport-item">击杀统计编号-{{killReportInfo.id}}</div>
             <div class="killReport-item">击杀统计名-{{killReportInfo.name}}</div>
+            <div class="killReport-item">是否需要详细报告- {{killReportInfo.needDetail?'是':'否'}}</div>
             <div class="killReport-item">允许时间段-{{killReportInfo.killStartTime}}<span v-show="killReportInfo.killStartTime!=null&&killReportInfo.killEndTime!=null">至</span>{{killReportInfo.killEndTime}}</div>
+            <div class="killReport-item">目标联盟- {{killReportInfo.targetUnion==null?'无限制':killReportInfo.targetUnion}}</div>
+            <div class="killReport-item">目标军团- {{killReportInfo.targetArmy==null?'无限制':killReportInfo.targetArmy}}</div>
             <div class="killReport-item">允许星域-{{killReportInfo.limitArea==null?'无限制':killReportInfo.limitArea}}</div>
             <div class="killReport-item">允许星座-{{killReportInfo.limitConstellation==null?'无限制':killReportInfo.limitConstellation}}</div>
             <div class="killReport-item">允许星系-{{killReportInfo.limitGalaxy==null?'无限制':killReportInfo.limitGalaxy}}</div>
@@ -84,7 +88,7 @@
         </template>
     </el-dialog>
 
-    <el-dialog v-model="modifyModal" title="补损详情" width="80%">
+    <el-dialog v-model="modifyModal" title="修改" width="80%">
         <div class="modify-box">
             <div class="modify-item">
                 <span style="margin-right:10px">时间</span>
@@ -105,6 +109,10 @@
                 <el-select v-model="killInfo.shipName" placeholder="请选择舰船名" style="width:220px" filterable>
                     <el-option v-for="item in shipList" :key="item.name" :label="item.name" :value="item.name"></el-option>
                 </el-select>
+            </div>
+            <div class="modify-item">
+                <span style="margin-right:10px">被击杀军团</span>
+                <el-input v-model="killInfo.killedArmyShortName" placeholder="请输入被击杀军团简称" style="width:220px"/>
             </div>
             <div class="modify-item">
                 <span style="margin-right:10px">星域</span>
@@ -168,9 +176,12 @@ export default {
             killReportInfo:{
                 id:null,
                 name:null,
+                needDetail:false,
                 endTime:null,
                 killStartTime:null,
                 killEndTime:null,
+                targetUnion:null,
+                targetArmy:null,
                 limitArea:null,
                 limitConstellation:null,
                 limitGalaxy:null
@@ -235,6 +246,7 @@ export default {
             this.killInfo.armyShortName = value.kmArmyShortName;
             this.killInfo.gameId = value.kmGameId;
             this.killInfo.shipName = value.shipName;
+            this.killInfo.killedArmyShortName = value.armyShortName;
             this.killInfo.area = value.area;
             this.killInfo.constellation = value.constellation;
             this.killInfo.galaxy = value.galaxy;
@@ -247,6 +259,7 @@ export default {
             this.detectResultList[this.killInfo.index].kmArmyShortName = this.killInfo.armyShortName;
             this.detectResultList[this.killInfo.index].kmGameId = this.killInfo.gameId;
             this.detectResultList[this.killInfo.index].shipName = this.killInfo.shipName;
+            this.detectResultList[this.killInfo.index].armyShortName = this.killInfo.killedArmyShortName;
             this.detectResultList[this.killInfo.index].area = this.killInfo.area;
             this.detectResultList[this.killInfo.index].constellation = this.killInfo.constellation;
             this.detectResultList[this.killInfo.index].galaxy = this.killInfo.galaxy;
@@ -265,8 +278,11 @@ export default {
             }).then(res=>{
                 this.killReportInfo.name = res.obj.name;
                 this.killReportInfo.endTime = res.obj.endTime;
+                this.killReportInfo.needDetail = res.obj.needDetail;
                 this.killReportInfo.killStartTime = res.obj.killStartTime;
                 this.killReportInfo.killEndTime = res.obj.killEndTime;
+                this.killReportInfo.targetUnion = res.obj.targetUnion==null?null:JSON.parse(res.obj.targetUnion);
+                this.killReportInfo.targetArmy = res.obj.targetArmy==null?null:JSON.parse(res.obj.targetArmy);
                 this.killReportInfo.limitArea = res.obj.limitArea==null?null:JSON.parse(res.obj.limitArea);
                 this.killReportInfo.limitConstellation = res.obj.limitConstellation==null?null:JSON.parse(res.obj.limitConstellation);
                 this.killReportInfo.limitGalaxy = res.obj.limitGalaxy==null?null:JSON.parse(res.obj.limitGalaxy);
@@ -314,33 +330,37 @@ export default {
                 }
             }else if(response.obj.dataType&&response.obj.dataType=="multiple"){
                 console.log(response.obj.list);
-                for(let item of response.obj.list){
-                    let verifyResult = this.verifyDetect(item);
-                    if(verifyResult==null){
-                        let detectResult = {
-                            reportTime:item.reportTime,
-                            shipName:item.shipName,
-                            area:item.area,
-                            constellation:item.constellation,
-                            galaxy:item.galaxy,
-                            kmArmyShortName:item.armyShortName,
-                            kmGameId:item.gameId,
-                            money:item.money,
-                            info:undefined,
-                            isModify:false,
-                            killReportId:this.killReportInfo.id,
-                            img:response.obj.img
+                if(this.killReportInfo.needDetail){
+                    errorList.push("本次上报需要详细战报，请不要上传列表截图");
+                }else{
+                    for(let item of response.obj.list){
+                        let verifyResult = this.verifyDetect(item);
+                        if(verifyResult==null){
+                            let detectResult = {
+                                reportTime:item.reportTime,
+                                shipName:item.shipName,
+                                area:item.area,
+                                constellation:item.constellation,
+                                galaxy:item.galaxy,
+                                kmArmyShortName:item.armyShortName,
+                                kmGameId:item.gameId,
+                                money:item.money,
+                                info:undefined,
+                                isModify:false,
+                                killReportId:this.killReportInfo.id,
+                                img:response.obj.img
+                            }
+                            this.detectResultList.push(detectResult);
+                            num++;
+                        }else{
+                            errorList.push("【"+item.shipName+"】"+verifyResult);
                         }
-                        this.detectResultList.push(detectResult);
-                        num++;
-                    }else{
-                        errorList.push("【"+item.shipName+"】"+verifyResult);
                     }
                 }
             }
             if(errorList.length==0){
                 ElMessage({
-                    message: '新增'+num+'条记录',
+                    message: '识别'+num+'条记录',
                     type: 'success',
                 })
             }else{
@@ -349,7 +369,7 @@ export default {
                     errorInfo+=item+','
                 }
                 errorInfo = errorInfo.substring(0,errorInfo.length-1);
-                ElMessage.error('新增'+num+'条记录,'+errorInfo);
+                ElMessage.error('识别'+num+'条记录,'+errorInfo);
             }
 
         },

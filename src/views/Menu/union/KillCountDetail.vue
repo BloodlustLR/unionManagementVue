@@ -14,8 +14,11 @@
                     <div class="killReport-box">
                         <div class="killReport-item" style="font-weight:bolder">补损编号- {{killReportInfo.id}}</div>
                         <div class="killReport-item" style="font-weight:bolder">补损名- {{killReportInfo.name}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">是否需要详细报告- {{killReportInfo.needDetail?'是':'否'}}</div>
                         <div class="killReport-item" style="font-weight:bolder">起始时间- {{killReportInfo.killStartTime}}</div>
                         <div class="killReport-item" style="font-weight:bolder">结束时间- {{killReportInfo.killEndTime}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">目标联盟- {{killReportInfo.targetUnion==null?'无限制':killReportInfo.targetUnion}}</div>
+                        <div class="killReport-item" style="font-weight:bolder">目标军团- {{killReportInfo.targetArmy==null?'无限制':killReportInfo.targetArmy}}</div>
                         <div class="killReport-item" style="font-weight:bolder">允许星域- {{killReportInfo.limitArea==null?'无限制':killReportInfo.limitArea}}</div>
                         <div class="killReport-item" style="font-weight:bolder">允许星座- {{killReportInfo.limitConstellation==null?'无限制':killReportInfo.limitConstellation}}</div>
                         <div class="killReport-item" style="font-weight:bolder">允许星系- {{killReportInfo.limitGalaxy==null?'无限制':killReportInfo.limitGalaxy}}</div>
@@ -24,6 +27,7 @@
                     </div>
                     <div class="army-box">
                         <el-tree :data="unionArmyList" :props="defaultProps"  @node-click="handleNodeClick"/>
+                        <div v-show="unsignedArmyList.length>0" class="unsigned-army" @click="openUnsignedArmyModal">存在未被录入的被击杀军团，点击此处录入</div>
                     </div>
                 </div>
                 <div class="detail-right">
@@ -63,6 +67,32 @@
         </span>
         </template>
     </el-dialog>
+
+    <el-dialog v-model="unsignedArmyModal" title="军团录入" width="920px">
+        <div>
+            <div style="width:400px;margin:0 auto;text-align:center;height:60px;line-height:60px">
+                联盟:
+                <el-select v-model="unsignedArmyInfo.unionId" placeholder="请输入军团简称" style="width:200px;margin-left:10px;" default-first-option>
+                    <el-option v-for="item in unionList" :key="item.id" :label="item.name" :value="item.id"></el-option>
+                </el-select>
+            </div>
+            <div style="width:400px;margin:0 auto;text-align:center;height:60px;line-height:60px">
+                简称:
+                <el-select v-model="unsignedArmyInfo.shortName" placeholder="请输入军团简称" style="width:200px;margin-left:10px;" default-first-option>
+                    <el-option v-for="item in unsignedArmyList" :key="item" :label="item" :value="item"></el-option>
+                </el-select>
+            </div>
+            <div style="width:400px;margin:0 auto;text-align:center;height:60px;line-height:60px">
+                全称:<el-input v-model="unsignedArmyInfo.name" placeholder="请输入军团全称" style="width:200px;margin-left:10px;"/>
+            </div>
+        </div>
+        <template #footer>
+        <span class="dialog-footer">
+            <el-button @click="unsignedArmyModal = false">关闭</el-button>
+            <el-button type="primary" @click="addArmy">确认</el-button>
+        </span>
+        </template>
+    </el-dialog>
 </div>
 </template>
 <script>
@@ -77,13 +107,17 @@ export default {
                 id:null,
                 name:null,
                 endTime:null,
+                needDetail:false,
                 killStartTime:null,
                 killEndTime:null,
+                targetUinon:null,
+                targetArmy:null,
                 limitArea:null,
                 limitConstellation:null,
                 limitGalaxy:null
             },
             totalKill:0,
+
 
             unionArmyList:[],
             defaultProps: {
@@ -93,7 +127,16 @@ export default {
 
             armyKillList:[],
             imgModal:false,
-            imgSrc:''
+            imgSrc:'',
+
+            unsignedArmyList:[],
+            unsignedArmyModal:false,
+            unionList:[],
+            unsignedArmyInfo:{
+                unionId:null,
+                shortName:'',
+                name:''
+            },
         }
     },
     computed:{
@@ -114,6 +157,37 @@ export default {
         this.refreshAllDetail();
     },
     methods:{
+
+        openUnsignedArmyModal(){
+            this.unsignedArmyModal = true;
+            this.unsignedArmyInfo.shortName = this.unsignedArmyList[0];
+            this.$request.get("/union/getAllUnion").then(res=>{
+                this.unionList = res.obj;
+            })
+        },
+
+        addArmy(){
+            if(isEmpty(this.unsignedArmyInfo.shortName)||isEmpty(this.unsignedArmyInfo.name)){
+                ElMessage({
+                    message: '请先补全数据',
+                    type: 'warning',
+                })
+                return;
+            }
+
+            this.$request.post("/army/addArmy",this.unsignedArmyInfo).then(res => {
+                if(res.obj=="success"){
+                    ElMessage({
+                        message: '新增成功',
+                        type: 'success',
+                    })
+                    this.refreshAllDetail();
+                }else{
+                    ElMessage.error('新增失败');
+                }
+            })
+        },
+
         changeLabel(value){
             if(value == "detail"){
                 this.$nextTick(()=>{
@@ -130,11 +204,21 @@ export default {
             this.getKillReportInfo();
             this.getKillReportTotal();
             this.getKillReportUnionArmy();
+            this.getKillReportUnsignedArmy();
         },
 
         refreshAllDiagram(){
             this.getAllArmyRank();
             this.getAreaKill();
+        },
+
+        getKillReportUnsignedArmy(){
+            this.$request.get("/killReport/getKillReportUnsignedArmy",{
+                pid:this.killReportInfo.id
+            }).then(res=>{
+                this.unsignedArmyList = res.obj;
+                console.log("unsignedArmy",this.unsignedArmyList);
+            })
         },
 
         getAllArmyRank(){
@@ -416,8 +500,11 @@ export default {
             }).then(res=>{
                 this.killReportInfo.name = res.obj.name;
                 this.killReportInfo.endTime = res.obj.endTime;
+                this.killReportInfo.needDetail = res.obj.needDetail;
                 this.killReportInfo.killStartTime = res.obj.killStartTime;
                 this.killReportInfo.killEndTime = res.obj.killEndTime;
+                this.killReportInfo.targetUnion = res.obj.targetUnion==null?null:JSON.parse(res.obj.targetUnion);
+                this.killReportInfo.targetArmy = res.obj.targetArmy==null?null:JSON.parse(res.obj.targetArmy);
                 this.killReportInfo.limitArea = res.obj.limitArea==null?null:JSON.parse(res.obj.limitArea);
                 this.killReportInfo.limitConstellation = res.obj.limitConstellation==null?null:JSON.parse(res.obj.limitConstellation);
                 this.killReportInfo.limitGalaxy = res.obj.limitGalaxy==null?null:JSON.parse(res.obj.limitGalaxy);
@@ -437,7 +524,7 @@ export default {
                 pid:this.killReportInfo.id
             }).then(res=>{
                 this.unionArmyList = res.obj;
-                console.log(this.unionArmyList);
+                console.log("unionArmyList",this.unionArmyList);
             })
         },
 
@@ -545,6 +632,24 @@ function compare(propertyName) {
         }
     }
 }
+
+/**
+ * 判断数据是否为空
+ * @param value 需要验证的数据
+ * @returns {boolean}
+ */
+function isEmpty(value) {
+  if (
+    value === undefined ||
+    value === null ||
+    value === "" ||
+    value.toString().trim().length === 0
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}
 </script>
 <style lang="less">
 .killCountDetail{
@@ -595,6 +700,23 @@ function compare(propertyName) {
                         overflow-y: auto;
                         border:1px solid black;
                         border-right:none;
+                        position:relative;
+
+                        .unsigned-army{
+                            position:absolute;
+                            bottom:0;
+                            width:100%;
+                            height:30px;
+                            line-height: 30px;
+                            background-color: red;
+                            color:white;
+                            text-align: center;
+                            z-index:999;
+                        }
+
+                        .unsigned-army:hover{
+                            cursor: pointer;
+                        }
                     }
 
                 }

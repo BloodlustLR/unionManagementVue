@@ -373,7 +373,7 @@ export default {
             }
             if(errorList.length==0){
                 ElMessage({
-                    message: '新增'+num+'条记录',
+                    message: '识别'+num+'条记录',
                     type: 'success',
                 })
             }else{
@@ -382,7 +382,7 @@ export default {
                     errorInfo+=item+','
                 }
                 errorInfo = errorInfo.substring(0,errorInfo.length-1);
-                ElMessage.error('新增'+num+'条记录,'+errorInfo);
+                ElMessage.error('识别'+num+'条记录,'+errorInfo);
             }
 
             

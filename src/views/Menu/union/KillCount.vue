@@ -34,10 +34,29 @@
                 截止时间:<el-date-picker v-model="addKillReportInfo.endTime" type="datetime" placeholder="请选择截止时间" style="width:200px;margin-left:10px;"></el-date-picker>
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                是否需要详细报告:<el-switch v-model="addKillReportInfo.needDetail" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 限制时间:<el-switch v-model="addKillReportInfo.hasLimitTime" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
             </div>
             <div v-show="addKillReportInfo.hasLimitTime" style="width:600px;margin:0 auto;text-align:left;">
                 <el-date-picker v-model="addKillReportInfo.limitTime" type="datetimerange" range-separator="至" start-placeholder="起始时间" end-placeholder="结束时间"></el-date-picker>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                目标联盟:<el-switch v-model="addKillReportInfo.hasTargetUnion" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+            </div>
+            <div v-show="addKillReportInfo.hasTargetUnion" style="width:600px;margin:0 auto;text-align:left;">
+                <el-select v-model="addKillReportInfo.targetUnion" size="medium" placeholder="选择目标联盟" width="200"  filterable multiple>
+                    <el-option v-for="(item,index) in unionList" :key="index" :label="item.shortName" :value="item.shortName"></el-option>
+                </el-select>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                目标军团:<el-switch v-model="addKillReportInfo.hasTargetArmy" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+            </div>
+            <div v-show="addKillReportInfo.hasTargetArmy" style="width:600px;margin:0 auto;text-align:left;">
+                <el-select v-model="addKillReportInfo.targetArmy" size="medium" placeholder="选择目标军团" width="200"  filterable multiple>
+                    <el-option v-for="(item,index) in armyList" :key="index" :label="item.shortName" :value="item.shortName"></el-option>
+                </el-select>
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 限制星域:<el-switch v-model="addKillReportInfo.hasLimitArea" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
@@ -87,10 +106,29 @@
                 截止时间:<el-date-picker v-model="configKillReportInfo.endTime" type="datetime" placeholder="请选择截止时间" style="width:200px;margin-left:10px;"></el-date-picker>
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                是否需要详细报告:<el-switch v-model="configKillReportInfo.needDetail" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 限制时间:<el-switch v-model="configKillReportInfo.hasLimitTime" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
             </div>
             <div v-show="configKillReportInfo.hasLimitTime" style="width:600px;margin:0 auto;text-align:left;">
                 <el-date-picker v-model="configKillReportInfo.limitTime" type="datetimerange" range-separator="至" start-placeholder="起始时间" end-placeholder="结束时间"></el-date-picker>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                目标联盟:<el-switch v-model="configKillReportInfo.hasTargetUnion" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+            </div>
+            <div v-show="configKillReportInfo.hasTargetUnion" style="width:600px;margin:0 auto;text-align:left;">
+                <el-select v-model="configKillReportInfo.targetUnion" size="medium" placeholder="选择目标联盟" width="200"  filterable multiple>
+                    <el-option v-for="(item,index) in unionList" :key="index" :label="item.shortName" :value="item.shortName"></el-option>
+                </el-select>
+            </div>
+            <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
+                目标军团:<el-switch v-model="configKillReportInfo.hasTargetArmy" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
+            </div>
+            <div v-show="configKillReportInfo.hasTargetArmy" style="width:600px;margin:0 auto;text-align:left;">
+                <el-select v-model="configKillReportInfo.targetArmy" size="medium" placeholder="选择目标军团" width="200"  filterable multiple>
+                    <el-option v-for="(item,index) in armyList" :key="index" :label="item.shortName" :value="item.shortName"></el-option>
+                </el-select>
             </div>
             <div style="width:600px;margin:0 auto;text-align:left;height:60px;line-height:60px">
                 限制星域:<el-switch v-model="configKillReportInfo.hasLimitArea" active-color="#13ce66" inactive-color="#ff4949" style="margin-left:10px"/>
@@ -138,6 +176,9 @@ import { ElMessageBox,ElMessage } from 'element-plus'
 export default {
     data(){
         return{
+            
+            unionList:[],
+            armyList:[],
             filter:{
                 dateRange:[],
                 pageNum:1,
@@ -151,8 +192,13 @@ export default {
             addKillReportInfo:{
                 name:'',
                 endTime:new Date(),
+                needDetail:false,
                 hasLimitTime:false,
                 limitTime:[new Date(),new Date()],
+                hasTargetUnion:false,
+                targetUnion:[],
+                hasTargetArmy:false,
+                targetArmy:[],
                 hasLimitArea:false,
                 limitAreaList:[''],
                 hasLimitConstellation:false,
@@ -166,8 +212,13 @@ export default {
                 id:null,
                 name:'',
                 endTime:new Date(),
+                needDetail:false,
                 hasLimitTime:false,
                 limitTime:[new Date(),new Date()],
+                hasTargetUnion:false,
+                targetUnion:[],
+                hasTargetArmy:false,
+                targetArmy:[],
                 hasLimitArea:false,
                 limitAreaList:[''],
                 hasLimitConstellation:false,
@@ -177,10 +228,25 @@ export default {
             }
         }
     },
+    created(){
+        this.getUnionList();
+        this.getArmyList();
+    },
     mounted(){
         this.filterAll();
     },
     methods:{
+        getUnionList(){
+            this.$request.get("/union/getAllUnion").then(res =>{
+                this.unionList = res.obj;
+            })
+        },
+
+        getArmyList(){
+            this.$request.get("/army/getAllArmy").then(res =>{
+                this.armyList = res.obj;
+            })
+        },
 
         checkDetail(id){
             this.$router.push({
@@ -229,8 +295,13 @@ export default {
             this.addKillReportInfo={
                 name:'',
                 endTime:tomorrow,
+                needDetail:false,
                 hasLimitTime:false,
                 limitTime:[new Date(),new Date()],
+                hasTargetUnion:false,
+                targetUnion:[],
+                hasTargetArmy:false,
+                targetArmy:[],
                 hasLimitArea:false,
                 limitAreaList:[''],
                 hasLimitConstellation:false,
@@ -302,9 +373,14 @@ export default {
                 this.configKillReportInfo={
                     id:killReportInfo.id,
                     name:killReportInfo.name,
+                    needDetail:killReportInfo.needDetail,
                     endTime:new Date(killReportInfo.endTime),
                     hasLimitTime:killReportInfo.lossStartTime!=null&&killReportInfo.lossEndTime!=null,
                     limitTime:[new Date(killReportInfo.lossStartTime),new Date(killReportInfo.lossEndTime)],
+                    hasTargetUnion:killReportInfo.targetUnion!=null,
+                    targetUnion:killReportInfo.targetUnion==null?[]:JSON.parse(killReportInfo.targetUnion),
+                    hasTargetArmy:killReportInfo.targetArmy!=null,
+                    targetArmy:killReportInfo.targetArmy==null?[]:JSON.parse(killReportInfo.targetArmy),
                     hasLimitArea:killReportInfo.limitArea!=null,
                     limitAreaList:killReportInfo.limitArea==null?['']:JSON.parse(killReportInfo.limitArea),
                     hasLimitConstellation:killReportInfo.limitConstellation!=null,
